@@ -3,113 +3,248 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Generador de Cronograma de Viajes</title>
+  <title>Generador de Cronogramas</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-  <main class="app">
-    <section class="panel">
-      <h1>Generador de Cronograma</h1>
+<main class="app">
+  <section class="form-panel">
+    <h1>Generador de Cronogramas</h1>
+    <p>Cargá cliente, chofer, viajes y descargá una imagen lista para enviar.</p>
 
-      <label>Período</label>
-      <input id="periodo" value="Desde el martes 28 al jueves 30 de abril">
+    <div class="field">
+      <label>Cliente</label>
+      <input id="cliente" type="text" placeholder="Ej: Juan Pérez">
+    </div>
 
-      <label>Excepción</label>
-      <input id="excepcion" value="Excepcionalmente el lunes 27 solo será el viaje de vuelta a las 15 hs">
+    <div class="field">
+      <label>Chofer</label>
+      <input id="chofer" type="text" placeholder="Ej: Carlos">
+    </div>
 
-      <label>Horario ida</label>
-      <input id="horarioIda" value="6:55 / 7:00 hs">
+    <div class="field">
+      <label>Vehículo</label>
+      <input id="vehiculo" type="text" value="Citroën C3">
+    </div>
 
-      <label>Salida ida</label>
-      <input id="salidaIda" value="Casa">
+    <div class="field">
+      <label>Tipo de cronograma</label>
+      <select id="modo">
+        <option value="periodo">Por período</option>
+        <option value="dia">Por día</option>
+      </select>
+    </div>
 
-      <label>Llegada ida</label>
-      <input id="llegadaIda" value="Belgrano y Salta">
+    <div class="actions">
+      <button id="abrirModalPeriodo" class="btn primary" type="button">+ Agregar período</button>
+      <button id="abrirModalDia" class="btn primary hidden" type="button">+ Agregar día</button>
+    </div>
 
-      <label>Pasajeros ida</label>
-      <input id="pasajerosIda" value="2 pasajeros">
-
-      <label>Horario vuelta</label>
-      <input id="horarioVuelta" value="15:00 hs">
-
-      <label>Salida vuelta</label>
-      <input id="salidaVuelta" value="Belgrano y Salta">
-
-      <label>Llegada vuelta</label>
-      <input id="llegadaVuelta" value="Casa">
-
-      <label>Pasajeros vuelta</label>
-      <input id="pasajerosVuelta" value="3 pasajeros">
-
-      <button id="actualizar">Actualizar plantilla</button>
-      <button id="descargar">Descargar imagen</button>
+    <section id="listaPeriodosBox" class="list-box">
+      <h2>Períodos cargados</h2>
+      <div id="listaPeriodos"></div>
     </section>
 
-    <section class="preview">
-      <div id="cronograma" class="cronograma">
+    <section id="listaDiasBox" class="list-box hidden">
+      <h2>Días cargados</h2>
+      <div id="listaDias"></div>
+    </section>
+
+    <div class="actions">
+      <button id="verPreview" class="btn preview-btn" type="button">Ver vista previa</button>
+      <button id="guardar" class="btn dark" type="button">Guardar local</button>
+      <button id="descargar" class="btn success" type="button">Descargar imagen</button>
+      <button id="limpiar" class="btn danger" type="button">Limpiar todo</button>
+    </div>
+  </section>
+
+  <section id="previewPanel" class="preview-panel">
+    <div id="cronograma" class="cronograma">
+      <header class="preview-header">
+        <span class="tag">Cronograma</span>
         <h2>CRONOGRAMA DE VIAJES</h2>
+        <p id="previewCliente">Cliente: Sin especificar</p>
+        <p id="previewChofer">Chofer: Sin especificar</p>
+      </header>
 
-        <div class="aviso">
-          <strong id="txtPeriodo">Desde el martes 28 al jueves 30 de abril</strong>
-          <span id="txtExcepcion">Excepcionalmente el lunes 27 solo será el viaje de vuelta a las 15 hs</span>
+      <section id="previewContenido" class="preview-content"></section>
+
+      <footer class="preview-footer">
+        <div>
+          <h3>Resumen</h3>
+          <ul id="previewResumen"></ul>
         </div>
 
-        <div class="bloque ida">
-          <h3>➜ VIAJE DE IDA</h3>
-
-          <div class="grid header">
-            <div>🕘 Horario de salida</div>
-            <div>📍 Lugar de salida</div>
-            <div>📍 Lugar de llegada</div>
-            <div>👥 Pasajeros</div>
-          </div>
-
-          <div class="grid datos">
-            <div id="txtHorarioIda">6:55 / 7:00 hs</div>
-            <div id="txtSalidaIda">Casa</div>
-            <div id="txtLlegadaIda">Belgrano y Salta</div>
-            <div id="txtPasajerosIda">2 pasajeros</div>
-          </div>
+        <div class="car-card">
+          <img src="img/citroen-c3.png" alt="Vehículo">
+          <span id="previewVehiculo">Citroën C3</span>
         </div>
+      </footer>
 
-        <div class="bloque vuelta">
-          <h3>⬅ VIAJE DE VUELTA</h3>
+      <div class="watermark">Diseñado por LOLOSTECH.com</div>
+    </div>
+  </section>
+</main>
 
-          <div class="grid header">
-            <div>🕘 Horario de regreso</div>
-            <div>📍 Lugar de salida</div>
-            <div>🏠 Lugar de llegada</div>
-            <div>👥 Pasajeros</div>
-          </div>
+<div id="modalPeriodo" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2 id="tituloPeriodo">Agregar período</h2>
+      <button class="modal-close" data-close="modalPeriodo">×</button>
+    </div>
 
-          <div class="grid datos">
-            <div id="txtHorarioVuelta">15:00 hs</div>
-            <div id="txtSalidaVuelta">Belgrano y Salta</div>
-            <div id="txtLlegadaVuelta">Casa</div>
-            <div id="txtPasajerosVuelta">3 pasajeros</div>
-          </div>
-        </div>
-
-        <div class="resumen">
-          <div>
-            <h3>📅 RESUMEN</h3>
-            <ul>
-              <li id="resPeriodo">Período: Desde el martes 28 al jueves 30 de abril</li>
-              <li id="resExcepcion">Excepción: lunes 27 solo vuelta a las 15 hs</li>
-              <li id="resIda">Ida: 6:55 / 7:00 hs</li>
-              <li id="resVuelta">Vuelta: 15:00 hs</li>
-              <li id="resPasajeros">Pasajeros: 2 ida / 3 vuelta</li>
-            </ul>
-          </div>
-
-          <img src="img/citroen-c3.png" alt="Citroën C3" class="auto">
-        </div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Desde</label>
+        <input id="pDesde" type="date">
       </div>
-    </section>
-  </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="script.js"></script>
+      <div class="field">
+        <label>Hasta</label>
+        <input id="pHasta" type="date">
+      </div>
+    </div>
+
+    <h3>Viaje de ida</h3>
+
+    <div class="field">
+      <label>Horario ida</label>
+      <input id="pHorarioIda" type="time">
+    </div>
+
+    <div class="field">
+      <label>Salida ida</label>
+      <input id="pSalidaIda" type="text" placeholder="Casa">
+    </div>
+
+    <div class="field">
+      <label>Llegada ida</label>
+      <input id="pLlegadaIda" type="text" placeholder="Belgrano y Salta">
+    </div>
+
+    <div class="field">
+      <label>Pasajeros ida</label>
+      <input id="pPasajerosIda" type="number" min="0" value="2">
+    </div>
+
+    <h3>Viaje de vuelta</h3>
+
+    <div class="field">
+      <label>Horario vuelta</label>
+      <input id="pHorarioVuelta" type="time">
+    </div>
+
+    <div class="field">
+      <label>Salida vuelta</label>
+      <input id="pSalidaVuelta" type="text" placeholder="Belgrano y Salta">
+    </div>
+
+    <div class="field">
+      <label>Llegada vuelta</label>
+      <input id="pLlegadaVuelta" type="text" placeholder="Casa">
+    </div>
+
+    <div class="field">
+      <label>Pasajeros vuelta</label>
+      <input id="pPasajerosVuelta" type="number" min="0" value="3">
+    </div>
+
+    <div class="modal-actions">
+      <button id="guardarPeriodo" class="btn primary" type="button">Guardar período</button>
+      <button class="btn muted" data-close="modalPeriodo" type="button">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div id="modalDia" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2 id="tituloDia">Agregar día</h2>
+      <button class="modal-close" data-close="modalDia">×</button>
+    </div>
+
+    <div class="field">
+      <label>Día</label>
+      <input id="dFecha" type="date">
+    </div>
+
+    <div class="field">
+      <label>Tipo de viaje</label>
+      <select id="dTipo">
+        <option value="ida">Ida</option>
+        <option value="vuelta">Vuelta</option>
+        <option value="ida y vuelta">Ida y vuelta</option>
+      </select>
+    </div>
+
+    <div id="bloqueDiaIda" class="subbox">
+      <h3>Datos de ida</h3>
+
+      <div class="field">
+        <label>Horario ida</label>
+        <input id="dHorarioIda" type="time">
+      </div>
+
+      <div class="field">
+        <label>Salida ida</label>
+        <input id="dSalidaIda" type="text" placeholder="Casa">
+      </div>
+
+      <div class="field">
+        <label>Llegada ida</label>
+        <input id="dLlegadaIda" type="text" placeholder="Belgrano y Salta">
+      </div>
+
+      <div class="field">
+        <label>Pasajeros ida</label>
+        <input id="dPasajerosIda" type="number" min="0" value="2">
+      </div>
+    </div>
+
+    <div id="bloqueDiaVuelta" class="subbox hidden">
+      <h3>Datos de vuelta</h3>
+
+      <div class="field">
+        <label>Horario vuelta</label>
+        <input id="dHorarioVuelta" type="time">
+      </div>
+
+      <div class="field">
+        <label>Salida vuelta</label>
+        <input id="dSalidaVuelta" type="text" placeholder="Belgrano y Salta">
+      </div>
+
+      <div class="field">
+        <label>Llegada vuelta</label>
+        <input id="dLlegadaVuelta" type="text" placeholder="Casa">
+      </div>
+
+      <div class="field">
+        <label>Pasajeros vuelta</label>
+        <input id="dPasajerosVuelta" type="number" min="0" value="3">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button id="guardarDia" class="btn primary" type="button">Guardar día</button>
+      <button class="btn muted" data-close="modalDia" type="button">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div id="previewModal" class="modal preview-modal hidden">
+  <div class="modal-card preview-modal-card">
+    <div class="modal-head">
+      <h2>Vista previa</h2>
+      <button class="modal-close" data-close="previewModal">×</button>
+    </div>
+
+    <div id="previewMobileTarget"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="script.js"></script>
 </body>
 </html>

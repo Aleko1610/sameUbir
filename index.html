@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generador de Cronograma de Viajes</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <main class="app">
+    <section class="panel">
+      <h1>Generador de Cronograma</h1>
+
+      <label>Período</label>
+      <input id="periodo" value="Desde el martes 28 al jueves 30 de abril">
+
+      <label>Excepción</label>
+      <input id="excepcion" value="Excepcionalmente el lunes 27 solo será el viaje de vuelta a las 15 hs">
+
+      <label>Horario ida</label>
+      <input id="horarioIda" value="6:55 / 7:00 hs">
+
+      <label>Salida ida</label>
+      <input id="salidaIda" value="Casa">
+
+      <label>Llegada ida</label>
+      <input id="llegadaIda" value="Belgrano y Salta">
+
+      <label>Pasajeros ida</label>
+      <input id="pasajerosIda" value="2 pasajeros">
+
+      <label>Horario vuelta</label>
+      <input id="horarioVuelta" value="15:00 hs">
+
+      <label>Salida vuelta</label>
+      <input id="salidaVuelta" value="Belgrano y Salta">
+
+      <label>Llegada vuelta</label>
+      <input id="llegadaVuelta" value="Casa">
+
+      <label>Pasajeros vuelta</label>
+      <input id="pasajerosVuelta" value="3 pasajeros">
+
+      <button id="actualizar">Actualizar plantilla</button>
+      <button id="descargar">Descargar imagen</button>
+    </section>
+
+    <section class="preview">
+      <div id="cronograma" class="cronograma">
+        <h2>CRONOGRAMA DE VIAJES</h2>
+
+        <div class="aviso">
+          <strong id="txtPeriodo">Desde el martes 28 al jueves 30 de abril</strong>
+          <span id="txtExcepcion">Excepcionalmente el lunes 27 solo será el viaje de vuelta a las 15 hs</span>
+        </div>
+
+        <div class="bloque ida">
+          <h3>➜ VIAJE DE IDA</h3>
+
+          <div class="grid header">
+            <div>🕘 Horario de salida</div>
+            <div>📍 Lugar de salida</div>
+            <div>📍 Lugar de llegada</div>
+            <div>👥 Pasajeros</div>
+          </div>
+
+          <div class="grid datos">
+            <div id="txtHorarioIda">6:55 / 7:00 hs</div>
+            <div id="txtSalidaIda">Casa</div>
+            <div id="txtLlegadaIda">Belgrano y Salta</div>
+            <div id="txtPasajerosIda">2 pasajeros</div>
+          </div>
+        </div>
+
+        <div class="bloque vuelta">
+          <h3>⬅ VIAJE DE VUELTA</h3>
+
+          <div class="grid header">
+            <div>🕘 Horario de regreso</div>
+            <div>📍 Lugar de salida</div>
+            <div>🏠 Lugar de llegada</div>
+            <div>👥 Pasajeros</div>
+          </div>
+
+          <div class="grid datos">
+            <div id="txtHorarioVuelta">15:00 hs</div>
+            <div id="txtSalidaVuelta">Belgrano y Salta</div>
+            <div id="txtLlegadaVuelta">Casa</div>
+            <div id="txtPasajerosVuelta">3 pasajeros</div>
+          </div>
+        </div>
+
+        <div class="resumen">
+          <div>
+            <h3>📅 RESUMEN</h3>
+            <ul>
+              <li id="resPeriodo">Período: Desde el martes 28 al jueves 30 de abril</li>
+              <li id="resExcepcion">Excepción: lunes 27 solo vuelta a las 15 hs</li>
+              <li id="resIda">Ida: 6:55 / 7:00 hs</li>
+              <li id="resVuelta">Vuelta: 15:00 hs</li>
+              <li id="resPasajeros">Pasajeros: 2 ida / 3 vuelta</li>
+            </ul>
+          </div>
+
+          <img src="img/citroen-c3.png" alt="Citroën C3" class="auto">
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

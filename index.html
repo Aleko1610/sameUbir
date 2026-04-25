@@ -47,20 +47,31 @@
   <section class="form-panel">
     <h1>Generador de Cronogramas</h1>
     <p>Cargá cliente, chofer, viajes y descargá una imagen lista para enviar.</p>
+    <a href="abm.html" class="btn primary" style="display:block;text-align:center;text-decoration:none;margin-bottom:16px;">⚙ Gestionar clientes, choferes y vehículos</a>
+
+    <div style="margin-bottom:14px;">
+      <a href="abm.html" class="btn primary" style="text-decoration:none;display:block;text-align:center;padding:11px 16px;font-size:14px;">⚙ Gestionar clientes, choferes y vehículos</a>
+    </div>
 
     <div class="field">
       <label>Cliente</label>
-      <input id="cliente" type="text" placeholder="Ej: Juan Pérez">
+      <select id="cliente">
+        <option value="">— Seleccioná un cliente —</option>
+      </select>
     </div>
 
     <div class="field">
       <label>Chofer</label>
-      <input id="chofer" type="text" placeholder="Ej: Carlos">
+      <select id="chofer">
+        <option value="">— Seleccioná un chofer —</option>
+      </select>
     </div>
 
     <div class="field">
       <label>Vehículo</label>
-      <input id="vehiculo" type="text" value="Citroën C3">
+      <select id="vehiculo">
+        <option value="">— Seleccioná un vehículo —</option>
+      </select>
     </div>
 
     <div class="field">
@@ -87,28 +98,29 @@
     </section>
 
     <div class="actions">
-      <button id="verPreview" class="btn preview-btn" type="button">Ver vista previa</button>
-      <button id="guardar" class="btn dark" type="button">Guardar local</button>
+      <button id="verPreview" class="btn primary" type="button">Ver vista previa</button>
+      <button id="guardar" class="btn dark hidden" type="button">Guardar local</button>
       <button id="descargar" class="btn success" type="button">Descargar imagen</button>
-      <button id="limpiar" class="btn danger" type="button">Limpiar todo</button>
-      <button id="cerrarSesion" class="btn danger" type="button">Cerrar sesión</button>
+      <button id="limpiar" class="btn warning" type="button">Limpiar todo</button>
+      <button id="cerrarSesion" class="btn dark" type="button">Cerrar sesión</button>
     </div>
   </section>
 
   <section id="previewPanel" class="preview-panel">
     <div id="cronograma" class="cronograma">
       <header class="preview-header">
-        <span class="tag">Cronograma</span>
         <h2>CRONOGRAMA DE VIAJES</h2>
-        <p id="previewCliente">Cliente: Sin especificar</p>
-        <p id="previewChofer">Chofer: Sin especificar</p>
+        <div class="preview-header-meta">
+          <span><strong>Cliente:</strong> <span id="previewCliente">Sin especificar</span></span>
+          <span><strong>Chofer:</strong> <span id="previewChofer">Sin especificar</span></span>
+        </div>
       </header>
 
       <section id="previewContenido" class="preview-content"></section>
 
       <footer class="preview-footer">
-        <div>
-          <h3>Resumen</h3>
+        <div class="preview-footer-resumen">
+          <h3><img src="icons/icon-calendario.png" class="ico" alt=""> Resumen</h3>
           <ul id="previewResumen"></ul>
         </div>
 
@@ -285,11 +297,15 @@
     <div id="loginModalIcon" class="login-modal-icon"></div>
     <h2 id="loginModalTitle"></h2>
     <p id="loginModalText"></p>
-    <button id="loginModalBtn" class="btn primary" type="button">Aceptar</button>
+    <div id="loginModalActions" style="display:flex;gap:10px;justify-content:center;">
+      <button id="loginModalBtn" class="btn primary" type="button">Aceptar</button>
+      <button id="loginModalCancelBtn" class="btn muted hidden" type="button">Cancelar</button>
+    </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="db.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CronoVic — Gestión</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .abm-page { min-height: 100vh; background: var(--bg); padding: 24px; }
+
+    .abm-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .abm-header-left { display: flex; align-items: center; gap: 14px; }
+    .abm-logo { width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, #1677d2, #159947); display: grid; place-items: center; color: white; font-size: 18px; font-weight: 900; }
+    .abm-header h1 { margin: 0; font-size: 24px; }
+    .abm-header p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+
+    .abm-tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid var(--line); }
+    .tab-btn { padding: 12px 22px; border: none; background: none; font-size: 15px; font-weight: 700; color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; border-radius: 10px 10px 0 0; }
+    .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); background: var(--blue-soft); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .abm-panel { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; }
+    .abm-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .abm-panel-header h2 { margin: 0; font-size: 20px; }
+
+    .abm-list { display: grid; gap: 10px; }
+    .abm-item { border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #fafbfc; }
+    .abm-item-info strong { display: block; font-size: 15px; margin-bottom: 3px; }
+    .abm-item-info span { font-size: 13px; color: var(--muted); line-height: 1.4; }
+    .abm-item-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .abm-item-actions button { padding: 8px 14px; border-radius: 10px; border: none; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+    .abm-empty { text-align: center; padding: 32px; color: var(--muted); font-size: 15px; background: #f8fafc; border-radius: 14px; border: 1px dashed var(--line); }
+
+    .abm-modal { position: fixed; inset: 0; background: rgba(15,23,42,.56); display: flex; align-items: center; justify-content: center; padding: 18px; z-index: 50; }
+    .abm-modal-card { width: min(480px,100%); background: white; border-radius: 22px; padding: 24px; box-shadow: 0 24px 80px rgba(0,0,0,.28); }
+    .abm-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .abm-modal-head h2 { margin: 0; font-size: 20px; }
+  </style>
+</head>
+<body>
+
+<div class="abm-page">
+  <div class="abm-header">
+    <div class="abm-header-left">
+      <div class="abm-logo">CV</div>
+      <div>
+        <h1>CronoVic — Gestión</h1>
+        <p>Administrá clientes, choferes y vehículos</p>
+      </div>
+    </div>
+    <a href="index.html" class="btn dark" style="text-decoration:none;padding:12px 20px;font-size:14px;">← Volver al cronograma</a>
+  </div>
+
+  <div class="abm-tabs">
+    <button class="tab-btn active" data-tab="clientes">Clientes</button>
+    <button class="tab-btn" data-tab="choferes">Choferes</button>
+    <button class="tab-btn" data-tab="vehiculos">Vehículos</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-clientes">
+    <div class="abm-panel">
+      <div class="abm-panel-header">
+        <h2>Clientes</h2>
+        <button class="btn primary" id="btnNuevoCliente" type="button">+ Nuevo cliente</button>
+      </div>
+      <div class="abm-list" id="listaClientes"></div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-choferes">
+    <div class="abm-panel">
+      <div class="abm-panel-header">
+        <h2>Choferes</h2>
+        <button class="btn primary" id="btnNuevoChofer" type="button">+ Nuevo chofer</button>
+      </div>
+      <div class="abm-list" id="listaChoferes"></div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-vehiculos">
+    <div class="abm-panel">
+      <div class="abm-panel-header">
+        <h2>Vehículos</h2>
+        <button class="btn primary" id="btnNuevoVehiculo" type="button">+ Nuevo vehículo</button>
+      </div>
+      <div class="abm-list" id="listaVehiculos"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CLIENTE -->
+<div id="modalCliente" class="abm-modal hidden">
+  <div class="abm-modal-card">
+    <div class="abm-modal-head">
+      <h2 id="tituloModalCliente">Nuevo cliente</h2>
+      <button class="modal-close" data-close="modalCliente" type="button">×</button>
+    </div>
+    <div class="field"><label>Nombre completo</label><input id="cNombre" type="text" placeholder="Ej: Juan Pérez"></div>
+    <div class="field"><label>Teléfono</label><input id="cTelefono" type="tel" placeholder="Ej: 299 4123456"></div>
+    <div class="field"><label>Dirección</label><input id="cDireccion" type="text" placeholder="Ej: Belgrano 1234"></div>
+    <div class="modal-actions">
+      <button id="guardarCliente" class="btn primary" type="button">Guardar</button>
+      <button class="btn muted" data-close="modalCliente" type="button">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CHOFER -->
+<div id="modalChofer" class="abm-modal hidden">
+  <div class="abm-modal-card">
+    <div class="abm-modal-head">
+      <h2 id="tituloModalChofer">Nuevo chofer</h2>
+      <button class="modal-close" data-close="modalChofer" type="button">×</button>
+    </div>
+    <div class="field"><label>Nombre completo</label><input id="chNombre" type="text" placeholder="Ej: Carlos Rodríguez"></div>
+    <div class="field"><label>Teléfono</label><input id="chTelefono" type="tel" placeholder="Ej: 299 4654321"></div>
+    <div class="field"><label>Licencia</label><input id="chLicencia" type="text" placeholder="Ej: B2 - 00123456"></div>
+    <div class="modal-actions">
+      <button id="guardarChofer" class="btn primary" type="button">Guardar</button>
+      <button class="btn muted" data-close="modalChofer" type="button">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VEHÍCULO -->
+<div id="modalVehiculo" class="abm-modal hidden">
+  <div class="abm-modal-card">
+    <div class="abm-modal-head">
+      <h2 id="tituloModalVehiculo">Nuevo vehículo</h2>
+      <button class="modal-close" data-close="modalVehiculo" type="button">×</button>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label>Marca</label><input id="vMarca" type="text" placeholder="Ej: Citroën"></div>
+      <div class="field"><label>Modelo</label><input id="vModelo" type="text" placeholder="Ej: C3"></div>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label>Patente</label><input id="vPatente" type="text" placeholder="Ej: ABC 123"></div>
+      <div class="field"><label>Año</label><input id="vAnio" type="number" placeholder="Ej: 2020" min="1990" max="2099"></div>
+    </div>
+    <div class="modal-actions">
+      <button id="guardarVehiculo" class="btn primary" type="button">Guardar</button>
+      <button class="btn muted" data-close="modalVehiculo" type="button">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMACIÓN ELIMINAR -->
+<div id="abmConfirmModal" class="login-modal hidden">
+  <div class="login-modal-card">
+    <div class="login-modal-icon error">!</div>
+    <h2 id="abmConfirmTitle"></h2>
+    <p id="abmConfirmText"></p>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button id="abmConfirmBtn" class="btn warning" type="button">Eliminar</button>
+      <button id="abmCancelBtn" class="btn muted" type="button">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script src="abm.js"></script>
+</body>
+</html>

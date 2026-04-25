@@ -4,11 +4,85 @@ let loginCorrectoPendiente = false;
 
 const $ = (id) => document.getElementById(id);
 
+// ── ICONOS PNG por color ──
+const ICO = {
+  ida: {
+    reloj:    `<img src="icons/icon-reloj-verde.png"      class="ico" alt="">`,
+    casa:     `<img src="icons/icon-casa-verde.png"       class="ico" alt="">`,
+    pin:      `<img src="icons/icon-pin-verde.png"        class="ico" alt="">`,
+    personas: `<img src="icons/icon-personas-verde.png"   class="ico" alt="">`,
+    flecha:   `<img src="icons/icon-flecha-der-verde.png" class="ico-flecha" alt="">`,
+  },
+  vuelta: {
+    reloj:    `<img src="icons/icon-reloj-azul.png"       class="ico" alt="">`,
+    casa:     `<img src="icons/icon-casa-azul.png"        class="ico" alt="">`,
+    pin:      `<img src="icons/icon-pin-azul.png"         class="ico" alt="">`,
+    personas: `<img src="icons/icon-personas-azul.png"    class="ico" alt="">`,
+    flecha:   `<img src="icons/icon-flecha-izq-azul.png"  class="ico-flecha" alt="">`,
+  },
+  calendario: `<img src="icons/icon-calendario.png" class="ico" alt="">`,
+};
+
 let periodos = [];
 let dias = [];
 
 let periodoEditando = null;
 let diaEditando = null;
+
+// ── KEYS ABM ──
+const KEY_CLIENTES  = "cronovic-clientes";
+const KEY_CHOFERES  = "cronovic-choferes";
+const KEY_VEHICULOS = "cronovic-vehiculos";
+
+function cargarDBAbm(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function cargarSelects() {
+  const clientes  = cargarDBAbm(KEY_CLIENTES);
+  const choferes  = cargarDBAbm(KEY_CHOFERES);
+  const vehiculos = cargarDBAbm(KEY_VEHICULOS);
+
+  const selCliente  = $("cliente");
+  const selChofer   = $("chofer");
+  const selVehiculo = $("vehiculo");
+
+  const valCliente  = selCliente.value;
+  const valChofer   = selChofer.value;
+  const valVehiculo = selVehiculo.value;
+
+  selCliente.innerHTML  = `<option value="">— Seleccioná un cliente —</option>`;
+  selChofer.innerHTML   = `<option value="">— Seleccioná un chofer —</option>`;
+  selVehiculo.innerHTML = `<option value="">— Seleccioná un vehículo —</option>`;
+
+  clientes.forEach((c) => {
+    const opt = document.createElement("option");
+    opt.value = c.nombre;
+    opt.textContent = c.nombre;
+    selCliente.appendChild(opt);
+  });
+
+  choferes.forEach((c) => {
+    const opt = document.createElement("option");
+    opt.value = c.nombre;
+    opt.textContent = c.nombre;
+    selChofer.appendChild(opt);
+  });
+
+  vehiculos.forEach((v) => {
+    const opt = document.createElement("option");
+    opt.value = `${v.marca} ${v.modelo}`;
+    opt.textContent = `${v.marca} ${v.modelo}${v.patente ? ` — ${v.patente}` : ""}`;
+    selVehiculo.appendChild(opt);
+  });
+
+  if (valCliente)  selCliente.value  = valCliente;
+  if (valChofer)   selChofer.value   = valChofer;
+  if (valVehiculo) selVehiculo.value = valVehiculo;
+}
 
 function valor(id) {
   const el = $(id);
@@ -18,6 +92,16 @@ function valor(id) {
 function setValor(id, value) {
   const el = $(id);
   if (el) el.value = value || "";
+}
+
+function sanitizar(texto) {
+  if (!texto) return "";
+  return texto
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function formatearFecha(fechaISO) {
@@ -227,8 +311,29 @@ function verificarViajeCercano(nuevoDia, indexEditando = null) {
   return { hayConflicto: false };
 }
 
+function validarPeriodo(p) {
+  if (!p.desde || !p.hasta) return "Completá las fechas de inicio y fin del período.";
+  if (p.desde > p.hasta) return "La fecha de inicio no puede ser posterior a la de fin.";
+  if (!p.horarioIda && !p.horarioVuelta) return "Ingresá al menos un horario (ida o vuelta).";
+  return null;
+}
+
+function validarDia(d) {
+  if (!d.fecha) return "Seleccioná una fecha para el día.";
+  if (d.tipo === "ida" && !d.ida?.horario) return "Ingresá el horario del viaje de ida.";
+  if (d.tipo === "vuelta" && !d.vuelta?.horario) return "Ingresá el horario del viaje de vuelta.";
+  if (d.tipo === "ida y vuelta" && !d.ida?.horario && !d.vuelta?.horario) return "Ingresá al menos un horario (ida o vuelta).";
+  return null;
+}
+
 function agregarOActualizarPeriodo() {
   const nuevo = obtenerPeriodoFormulario();
+
+  const error = validarPeriodo(nuevo);
+  if (error) {
+    mostrarLoginModal("error", "Datos incompletos", error);
+    return;
+  }
 
   if (periodoEditando !== null) {
     periodos[periodoEditando] = nuevo;
@@ -244,15 +349,22 @@ function agregarOActualizarPeriodo() {
 function agregarOActualizarDia() {
   const nuevo = obtenerDiaFormulario();
 
+  const error = validarDia(nuevo);
+  if (error) {
+    mostrarLoginModal("error", "Datos incompletos", error);
+    return;
+  }
+
   const conflicto = verificarViajeCercano(nuevo, diaEditando);
 
   if (conflicto.hayConflicto) {
-    alert(
-      `Atención: ya existe un viaje cercano el ${formatearFecha(conflicto.fecha)}.\n\n` +
-      `Horario cargado: ${formatearHora(conflicto.nuevoHorario)}\n` +
-      `Horario existente: ${formatearHora(conflicto.horarioExistente)}\n` +
-      `Diferencia: ${conflicto.diferencia} minutos.\n\n` +
-      `Revisá si corresponde cargarlo.`
+    mostrarLoginModal(
+      "error",
+      "Viaje cercano detectado",
+      `Ya existe un viaje cercano el ${formatearFecha(conflicto.fecha)}. ` +
+      `Horario cargado: ${formatearHora(conflicto.nuevoHorario)} / ` +
+      `Existente: ${formatearHora(conflicto.horarioExistente)} ` +
+      `(diferencia: ${conflicto.diferencia} min). Revisá si corresponde cargarlo.`
     );
   }
 
@@ -339,14 +451,27 @@ function pintarListaPeriodos() {
 
     item.innerHTML = `
       <strong>${textoPeriodo(p.desde, p.hasta)}</strong>
-      <span>Ida: ${formatearHora(p.horarioIda) || "-"} | ${p.salidaIda || "-"} → ${p.llegadaIda || "-"}</span>
-      <span>Vuelta: ${formatearHora(p.horarioVuelta) || "-"} | ${p.salidaVuelta || "-"} → ${p.llegadaVuelta || "-"}</span>
-
-      <div class="item-actions">
-        <button class="edit-btn" type="button" onclick="editarPeriodo(${index})">Modificar</button>
-        <button class="delete-btn" type="button" onclick="eliminarPeriodo(${index})">Eliminar</button>
-      </div>
+      <span>Ida: ${formatearHora(p.horarioIda) || "-"} | ${sanitizar(p.salidaIda) || "-"} → ${sanitizar(p.llegadaIda) || "-"}</span>
+      <span>Vuelta: ${formatearHora(p.horarioVuelta) || "-"} | ${sanitizar(p.salidaVuelta) || "-"} → ${sanitizar(p.llegadaVuelta) || "-"}</span>
+      <div class="item-actions"></div>
     `;
+
+    const acciones = item.querySelector(".item-actions");
+
+    const btnEditar = document.createElement("button");
+    btnEditar.className = "edit-btn";
+    btnEditar.type = "button";
+    btnEditar.textContent = "Modificar";
+    btnEditar.addEventListener("click", () => editarPeriodo(index));
+
+    const btnEliminar = document.createElement("button");
+    btnEliminar.className = "delete-btn";
+    btnEliminar.type = "button";
+    btnEliminar.textContent = "Eliminar";
+    btnEliminar.addEventListener("click", () => eliminarPeriodo(index));
+
+    acciones.appendChild(btnEditar);
+    acciones.appendChild(btnEliminar);
 
     contenedor.appendChild(item);
   });
@@ -373,15 +498,75 @@ function pintarListaDias() {
     item.innerHTML = `
       <strong>${formatearFecha(d.fecha) || "Día no especificado"}</strong>
       <span>${textoTipoViaje(d.tipo)} | ${partes.join(" / ")}</span>
-
-      <div class="item-actions">
-        <button class="edit-btn" type="button" onclick="editarDia(${index})">Modificar</button>
-        <button class="delete-btn" type="button" onclick="eliminarDia(${index})">Eliminar</button>
-      </div>
+      <div class="item-actions"></div>
     `;
+
+    const acciones = item.querySelector(".item-actions");
+
+    const btnEditar = document.createElement("button");
+    btnEditar.className = "edit-btn";
+    btnEditar.type = "button";
+    btnEditar.textContent = "Modificar";
+    btnEditar.addEventListener("click", () => editarDia(index));
+
+    const btnEliminar = document.createElement("button");
+    btnEliminar.className = "delete-btn";
+    btnEliminar.type = "button";
+    btnEliminar.textContent = "Eliminar";
+    btnEliminar.addEventListener("click", () => eliminarDia(index));
+
+    acciones.appendChild(btnEditar);
+    acciones.appendChild(btnEliminar);
 
     contenedor.appendChild(item);
   });
+}
+
+function crearTablaViaje(tipo, filas) {
+  const clase      = tipo === "vuelta" ? "vuelta" : "ida";
+  const titulo     = tipo === "vuelta" ? "VIAJE DE VUELTA" : "VIAJE DE IDA";
+  const ico        = ICO[clase];
+  const subPeriodo = filas[0]?.subPeriodo || "";
+
+  const tieneFecha = filas.some((x) => x.fechaLabel);
+
+  const filasHTML = filas.map((f) => {
+    const destacada = f.destacada ? ' class="row-destacada"' : "";
+    const fechaCel  = f.fechaLabel
+      ? `<td class="col-fecha">${sanitizar(f.fechaLabel)}${f.subLabel ? `<span class="sub-label">${sanitizar(f.subLabel)}</span>` : ""}</td>`
+      : "";
+
+    return `
+      <tr${destacada}>
+        ${tieneFecha ? fechaCel : ""}
+        <td><strong>${sanitizar(formatearHora(f.horario)) || "-"}</strong></td>
+        <td class="td-icono">${ico.casa} ${sanitizar(f.salida) || "-"}</td>
+        <td class="td-icono">${ico.pin} ${sanitizar(f.llegada) || "-"}</td>
+        <td>${textoPasajeros(f.pasajeros)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  const colFecha = tieneFecha ? `<th class="col-fecha"></th>` : "";
+
+  return `
+    <div class="seccion-header ${clase}">
+      ${ico.flecha}
+      <h4>${titulo}${subPeriodo ? `<span class="sub-periodo">${sanitizar(subPeriodo)}</span>` : ""}</h4>
+    </div>
+    <table class="viaje-tabla ${clase}">
+      <thead>
+        <tr>
+          ${colFecha}
+          <th><span class="th-icono">${ico.reloj}</span>Horario</th>
+          <th><span class="th-icono">${ico.casa}</span>Lugar de salida</th>
+          <th><span class="th-icono">${ico.pin}</span>Lugar de llegada</th>
+          <th><span class="th-icono">${ico.personas}</span>Pasajeros</th>
+        </tr>
+      </thead>
+      <tbody>${filasHTML}</tbody>
+    </table>
+  `;
 }
 
 function pintarPreviewPeriodos() {
@@ -389,13 +574,7 @@ function pintarPreviewPeriodos() {
   contenedor.innerHTML = "";
 
   if (periodos.length === 0) {
-    contenedor.innerHTML = `
-      <article class="periodo-card">
-        <div class="card-title">
-          <h3>Sin períodos cargados</h3>
-        </div>
-      </article>
-    `;
+    contenedor.innerHTML = `<article class="periodo-card"><div class="card-title">${ICO.calendario}<h3>Sin períodos cargados</h3></div></article>`;
     pintarResumen(["No hay períodos cargados todavía."]);
     return;
   }
@@ -404,21 +583,24 @@ function pintarPreviewPeriodos() {
     const card = document.createElement("article");
     card.className = "periodo-card";
 
+    const idaHTML    = crearTablaViaje("ida",    [{ horario: p.horarioIda,    salida: p.salidaIda,    llegada: p.llegadaIda,    pasajeros: p.pasajerosIda,    subPeriodo: textoPeriodo(p.desde, p.hasta) }]);
+    const vueltaHTML = crearTablaViaje("vuelta", [{ horario: p.horarioVuelta, salida: p.salidaVuelta, llegada: p.llegadaVuelta, pasajeros: p.pasajerosVuelta }]);
+
     card.innerHTML = `
       <div class="card-title">
+        ${ICO.calendario}
         <h3>${textoPeriodo(p.desde, p.hasta)}</h3>
       </div>
-
-      ${crearBloqueViaje("ida", p.horarioIda, p.salidaIda, p.llegadaIda, p.pasajerosIda)}
-      ${crearBloqueViaje("vuelta", p.horarioVuelta, p.salidaVuelta, p.llegadaVuelta, p.pasajerosVuelta)}
+      ${idaHTML}
+      ${vueltaHTML}
     `;
 
     contenedor.appendChild(card);
   });
 
-  pintarResumen(periodos.map((p) => {
-    return `${textoPeriodo(p.desde, p.hasta)}: ida ${formatearHora(p.horarioIda) || "-"} / vuelta ${formatearHora(p.horarioVuelta) || "-"}.`;
-  }));
+  pintarResumen(periodos.map((p) =>
+    `${textoPeriodo(p.desde, p.hasta)}: ida ${formatearHora(p.horarioIda) || "-"} / vuelta ${formatearHora(p.horarioVuelta) || "-"}.`
+  ));
 }
 
 function agruparDiasPorFecha() {
@@ -428,24 +610,18 @@ function agruparDiasPorFecha() {
     if (!grupos[dia.fecha]) grupos[dia.fecha] = [];
 
     if (dia.ida) {
-      grupos[dia.fecha].push({
-        tipo: "ida",
-        ...dia.ida
-      });
+      grupos[dia.fecha].push({ tipo: "ida", ...dia.ida });
     }
 
     if (dia.vuelta) {
-      grupos[dia.fecha].push({
-        tipo: "vuelta",
-        ...dia.vuelta
-      });
+      grupos[dia.fecha].push({ tipo: "vuelta", ...dia.vuelta });
     }
   });
 
   Object.keys(grupos).forEach((fecha) => {
-    grupos[fecha].sort((a, b) => {
-      return (horaAMinutos(a.horario) || 0) - (horaAMinutos(b.horario) || 0);
-    });
+    grupos[fecha].sort((a, b) =>
+      (horaAMinutos(a.horario) || 0) - (horaAMinutos(b.horario) || 0)
+    );
   });
 
   return grupos;
@@ -456,70 +632,50 @@ function pintarPreviewDias() {
   contenedor.innerHTML = "";
 
   if (dias.length === 0) {
-    contenedor.innerHTML = `
-      <article class="fecha-card">
-        <div class="card-title">
-          <h3>Sin días cargados</h3>
-        </div>
-      </article>
-    `;
+    contenedor.innerHTML = `<article class="fecha-card"><div class="card-title">${ICO.calendario}<h3>Sin días cargados</h3></div></article>`;
     pintarResumen(["No hay días cargados todavía."]);
     return;
   }
 
   const grupos = agruparDiasPorFecha();
 
-  Object.keys(grupos)
-    .sort()
-    .forEach((fecha) => {
-      const card = document.createElement("article");
-      card.className = "fecha-card";
+  // Agrupar por tipo de viaje para armar tablas con filas por fecha
+  const idas    = [];
+  const vueltas = [];
 
-      const viajesHTML = grupos[fecha].map((v) => {
-        return crearBloqueViaje(v.tipo, v.horario, v.salida, v.llegada, v.pasajeros);
-      }).join("");
-
-      card.innerHTML = `
-        <div class="card-title">
-          <h3>${formatearFecha(fecha) || "Día no especificado"}</h3>
-        </div>
-
-        ${viajesHTML}
-      `;
-
-      contenedor.appendChild(card);
+  Object.keys(grupos).sort().forEach((fecha) => {
+    grupos[fecha].forEach((v) => {
+      const fila = {
+        horario: v.horario,
+        salida: v.salida,
+        llegada: v.llegada,
+        pasajeros: v.pasajeros,
+        fechaLabel: formatearFecha(fecha) || "Día no especificado"
+      };
+      if (v.tipo === "ida")    idas.push(fila);
+      if (v.tipo === "vuelta") vueltas.push(fila);
     });
+  });
+
+  const card = document.createElement("article");
+  card.className = "fecha-card";
+
+  let html = "";
+  if (idas.length > 0)    html += crearTablaViaje("ida",    idas);
+  if (vueltas.length > 0) html += crearTablaViaje("vuelta", vueltas);
+
+  card.innerHTML = html;
+  contenedor.appendChild(card);
 
   const resumen = [];
-
-  Object.keys(grupos)
-    .sort()
-    .forEach((fecha) => {
-      const viajes = grupos[fecha]
-        .map((v) => `${v.tipo} ${formatearHora(v.horario) || "sin horario"}`)
-        .join(" / ");
-
-      resumen.push(`${formatearFecha(fecha) || "Día no especificado"}: ${viajes}.`);
-    });
+  Object.keys(grupos).sort().forEach((fecha) => {
+    const viajes = grupos[fecha]
+      .map((v) => `${v.tipo} ${formatearHora(v.horario) || "sin horario"}`)
+      .join(" / ");
+    resumen.push(`${formatearFecha(fecha) || "Día no especificado"}: ${viajes}.`);
+  });
 
   pintarResumen(resumen);
-}
-
-function crearBloqueViaje(tipo, horario, salida, llegada, pasajeros) {
-  const clase = tipo === "vuelta" ? "vuelta" : "ida";
-  const titulo = tipo === "vuelta" ? "Viaje de vuelta" : "Viaje de ida";
-
-  return `
-    <div class="viaje ${clase}">
-      <h4>${titulo}</h4>
-      <div class="data-grid">
-        <div><span>Horario</span><strong>${formatearHora(horario) || "-"}</strong></div>
-        <div><span>Salida</span><strong>${salida || "-"}</strong></div>
-        <div><span>Llegada</span><strong>${llegada || "-"}</strong></div>
-        <div><span>Pasajeros</span><strong>${textoPasajeros(pasajeros)}</strong></div>
-      </div>
-    </div>
-  `;
 }
 
 function pintarResumen(items) {
@@ -533,7 +689,50 @@ function pintarResumen(items) {
   });
 }
 
-function actualizarModo() {
+function cargarSelects() {
+  const clientes  = dbCargar("clientes");
+  const choferes  = dbCargar("choferes");
+  const vehiculos = dbCargar("vehiculos");
+
+  const selCliente = $("cliente");
+  const selChofer  = $("chofer");
+  const selVehiculo = $("vehiculo");
+
+  const valorCliente  = selCliente.value;
+  const valorChofer   = selChofer.value;
+  const valorVehiculo = selVehiculo.value;
+
+  selCliente.innerHTML  = `<option value="">— Seleccioná un cliente —</option>`;
+  selChofer.innerHTML   = `<option value="">— Seleccioná un chofer —</option>`;
+  selVehiculo.innerHTML = `<option value="">— Seleccioná un vehículo —</option>`;
+
+  clientes.forEach((c) => {
+    const opt = document.createElement("option");
+    opt.value = c.nombre;
+    opt.textContent = c.nombre;
+    if (c.nombre === valorCliente) opt.selected = true;
+    selCliente.appendChild(opt);
+  });
+
+  choferes.forEach((c) => {
+    const opt = document.createElement("option");
+    opt.value = c.nombre;
+    opt.textContent = c.nombre;
+    if (c.nombre === valorChofer) opt.selected = true;
+    selChofer.appendChild(opt);
+  });
+
+  vehiculos.forEach((v) => {
+    const label = `${v.marca} ${v.modelo}${v.patente ? ` — ${v.patente}` : ""}`;
+    const opt = document.createElement("option");
+    opt.value = `${v.marca} ${v.modelo}`;
+    opt.textContent = label;
+    if (opt.value === valorVehiculo) opt.selected = true;
+    selVehiculo.appendChild(opt);
+  });
+}
+
+
   const modo = valor("modo");
 
   $("abrirModalPeriodo").classList.toggle("hidden", modo !== "periodo");
@@ -546,8 +745,8 @@ function actualizarModo() {
 function actualizarTodo() {
   actualizarModo();
 
-  $("previewCliente").textContent = `Cliente: ${valor("cliente") || "Sin especificar"}`;
-  $("previewChofer").textContent = `Chofer: ${valor("chofer") || "Sin especificar"}`;
+  $("previewCliente").textContent = valor("cliente") || "Sin especificar";
+  $("previewChofer").textContent = valor("chofer") || "Sin especificar";
   $("previewVehiculo").textContent = valor("vehiculo") || "Vehículo no especificado";
 
   pintarListaPeriodos();
@@ -571,7 +770,7 @@ function guardarLocal() {
   };
 
   localStorage.setItem("cronograma-v4", JSON.stringify(data));
-  alert("Cronograma guardado en este dispositivo.");
+  mostrarLoginModal("ok", "Guardado", "Cronograma guardado en este dispositivo.");
 }
 
 function cargarLocal() {
@@ -583,35 +782,47 @@ function cargarLocal() {
     return;
   }
 
-  const data = JSON.parse(raw);
+  try {
+    const data = JSON.parse(raw);
 
-  setValor("cliente", data.cliente);
-  setValor("chofer", data.chofer);
-  setValor("vehiculo", data.vehiculo || "Citroën C3");
-  setValor("modo", data.modo || "periodo");
+    setValor("cliente", data.cliente);
+    setValor("chofer", data.chofer);
+    setValor("vehiculo", data.vehiculo || "Citroën C3");
+    setValor("modo", data.modo || "periodo");
 
-  periodos = Array.isArray(data.periodos) ? data.periodos : [];
-  dias = Array.isArray(data.dias) ? data.dias : [];
+    periodos = Array.isArray(data.periodos) ? data.periodos : [];
+    dias = Array.isArray(data.dias) ? data.dias : [];
+  } catch (e) {
+    console.warn("Datos guardados corruptos, se reinicia el cronograma.", e);
+    localStorage.removeItem("cronograma-v4");
+    setValor("vehiculo", "Citroën C3");
+    periodos = [];
+    dias = [];
+  }
 
   actualizarTodo();
 }
 
 function limpiarTodo() {
-  if (!confirm("¿Seguro que querés limpiar todo?")) return;
+  mostrarConfirm(
+    "Limpiar todo",
+    "¿Seguro que querés limpiar todo? Se perderán los datos no guardados.",
+    () => {
+      localStorage.removeItem("cronograma-v4");
 
-  localStorage.removeItem("cronograma-v4");
+      periodos = [];
+      dias = [];
 
-  periodos = [];
-  dias = [];
+      setValor("cliente", "");
+      setValor("chofer", "");
+      setValor("vehiculo", "Citroën C3");
+      setValor("modo", "periodo");
 
-  setValor("cliente", "");
-  setValor("chofer", "");
-  setValor("vehiculo", "Citroën C3");
-  setValor("modo", "periodo");
-
-  limpiarPeriodoFormulario();
-  limpiarDiaFormulario();
-  actualizarTodo();
+      limpiarPeriodoFormulario();
+      limpiarDiaFormulario();
+      actualizarTodo();
+    }
+  );
 }
 
 function descargarImagen() {
@@ -688,11 +899,36 @@ function mostrarLoginModal(tipo, titulo, texto) {
   icon.className = `login-modal-icon ${tipo}`;
   icon.textContent = tipo === "ok" ? "✓" : "!";
 
+  $("loginModalCancelBtn").classList.add("hidden");
+  modal._confirmCallback = null;
+
+  modal.classList.remove("hidden");
+}
+
+let _confirmCallback = null;
+
+function mostrarConfirm(titulo, texto, onConfirmar) {
+  const modal = $("loginModal");
+  const icon = $("loginModalIcon");
+
+  $("loginModalTitle").textContent = titulo;
+  $("loginModalText").textContent = texto;
+
+  icon.className = "login-modal-icon error";
+  icon.textContent = "!";
+
+  $("loginModalBtn").textContent = "Confirmar";
+  $("loginModalCancelBtn").classList.remove("hidden");
+
+  _confirmCallback = onConfirmar;
+
   modal.classList.remove("hidden");
 }
 
 function cerrarLoginModal() {
   $("loginModal").classList.add("hidden");
+  $("loginModalBtn").textContent = "Aceptar";
+  $("loginModalCancelBtn").classList.add("hidden");
 
   if (loginCorrectoPendiente) {
     $("loginPage").classList.add("hidden");
@@ -700,7 +936,21 @@ function cerrarLoginModal() {
     localStorage.setItem("cronovic-login", "ok");
     loginCorrectoPendiente = false;
     actualizarTodo();
+    return;
   }
+
+  if (_confirmCallback) {
+    const cb = _confirmCallback;
+    _confirmCallback = null;
+    cb();
+  }
+}
+
+function cancelarConfirm() {
+  $("loginModal").classList.add("hidden");
+  $("loginModalBtn").textContent = "Aceptar";
+  $("loginModalCancelBtn").classList.add("hidden");
+  _confirmCallback = null;
 }
 
 function intentarLogin() {
@@ -730,6 +980,7 @@ function verificarSesionLogin() {
 
 $("btnLogin").addEventListener("click", intentarLogin);
 $("loginModalBtn").addEventListener("click", cerrarLoginModal);
+$("loginModalCancelBtn").addEventListener("click", cancelarConfirm);
 
 $("loginUser").addEventListener("keydown", (e) => {
   if (e.key === "Enter") intentarLogin();
@@ -746,5 +997,6 @@ $("cerrarSesion").addEventListener("click", () => {
 
 verificarSesionLogin();
 cargarLocal();
+cargarSelects();
 actualizarBloquesDia();
 actualizarTodo();

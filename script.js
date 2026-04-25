@@ -1,3 +1,7 @@
+const LOGIN_USER = "vic";
+const LOGIN_PASS = "vic2026";
+let loginCorrectoPendiente = false;
+
 const $ = (id) => document.getElementById(id);
 
 let periodos = [];
@@ -674,6 +678,73 @@ document.querySelectorAll(".modal").forEach((modal) => {
   });
 });
 
+function mostrarLoginModal(tipo, titulo, texto) {
+  const modal = $("loginModal");
+  const icon = $("loginModalIcon");
+
+  $("loginModalTitle").textContent = titulo;
+  $("loginModalText").textContent = texto;
+
+  icon.className = `login-modal-icon ${tipo}`;
+  icon.textContent = tipo === "ok" ? "✓" : "!";
+
+  modal.classList.remove("hidden");
+}
+
+function cerrarLoginModal() {
+  $("loginModal").classList.add("hidden");
+
+  if (loginCorrectoPendiente) {
+    $("loginPage").classList.add("hidden");
+    $("app").classList.remove("hidden");
+    localStorage.setItem("cronovic-login", "ok");
+    loginCorrectoPendiente = false;
+    actualizarTodo();
+  }
+}
+
+function intentarLogin() {
+  const user = valor("loginUser");
+  const pass = valor("loginPass");
+
+  if (!user || !pass) {
+    mostrarLoginModal("error", "Datos incompletos", "Ingresá usuario y contraseña para continuar.");
+    return;
+  }
+
+  if (user === LOGIN_USER && pass === LOGIN_PASS) {
+    loginCorrectoPendiente = true;
+    mostrarLoginModal("ok", "Ingreso correcto", "Bienvenida a CronoVic.");
+    return;
+  }
+
+  mostrarLoginModal("error", "Acceso denegado", "Usuario o contraseña incorrectos.");
+}
+
+function verificarSesionLogin() {
+  if (localStorage.getItem("cronovic-login") === "ok") {
+    $("loginPage").classList.add("hidden");
+    $("app").classList.remove("hidden");
+  }
+}
+
+$("btnLogin").addEventListener("click", intentarLogin);
+$("loginModalBtn").addEventListener("click", cerrarLoginModal);
+
+$("loginUser").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") intentarLogin();
+});
+
+$("loginPass").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") intentarLogin();
+});
+
+$("cerrarSesion").addEventListener("click", () => {
+  localStorage.removeItem("cronovic-login");
+  location.reload();
+});
+
+verificarSesionLogin();
 cargarLocal();
 actualizarBloquesDia();
 actualizarTodo();

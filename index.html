@@ -8,7 +8,42 @@
 </head>
 <body>
 
-<main class="app">
+<section id="loginPage" class="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-icon">CV</div>
+      <div>
+        <h1>CronoVic</h1>
+        <p>Generador de cronogramas de viajes</p>
+      </div>
+    </div>
+
+    <div class="login-welcome">
+      <h2>Ingreso a la app</h2>
+      <p>Completá tus datos para comenzar a gestionar cronogramas.</p>
+    </div>
+
+    <div class="field">
+      <label>Usuario</label>
+      <input id="loginUser" type="text" placeholder="Ingresá tu usuario" autocomplete="username">
+    </div>
+
+    <div class="field">
+      <label>Contraseña</label>
+      <input id="loginPass" type="password" placeholder="Ingresá tu contraseña" autocomplete="current-password">
+    </div>
+
+    <button id="btnLogin" class="btn primary" type="button">
+      Ingresar
+    </button>
+
+    <div class="login-brand">
+      Diseñado por <strong>LOLOSTECH.com</strong>
+    </div>
+  </div>
+</section>
+
+<main id="app" class="app hidden">
   <section class="form-panel">
     <h1>Generador de Cronogramas</h1>
     <p>Cargá cliente, chofer, viajes y descargá una imagen lista para enviar.</p>
@@ -56,6 +91,7 @@
       <button id="guardar" class="btn dark" type="button">Guardar local</button>
       <button id="descargar" class="btn success" type="button">Descargar imagen</button>
       <button id="limpiar" class="btn danger" type="button">Limpiar todo</button>
+      <button id="cerrarSesion" class="btn danger" type="button">Cerrar sesión</button>
     </div>
   </section>
 
@@ -241,6 +277,15 @@
     </div>
 
     <div id="previewMobileTarget"></div>
+  </div>
+</div>
+
+<div id="loginModal" class="login-modal hidden">
+  <div class="login-modal-card">
+    <div id="loginModalIcon" class="login-modal-icon"></div>
+    <h2 id="loginModalTitle"></h2>
+    <p id="loginModalText"></p>
+    <button id="loginModalBtn" class="btn primary" type="button">Aceptar</button>
   </div>
 </div>
 

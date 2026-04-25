@@ -515,3 +515,138 @@ body {
     width: 220px;
   }
 }
+
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(22, 119, 210, 0.28), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(21, 153, 71, 0.20), transparent 34%),
+    linear-gradient(135deg, #0f172a, #111827);
+}
+
+.login-card {
+  width: min(420px, 100%);
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 26px;
+  padding: 28px;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.login-logo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.login-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #1677d2, #159947);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 900;
+  box-shadow: 0 14px 32px rgba(22, 119, 210, 0.32);
+}
+
+.login-logo h1 {
+  margin: 0;
+  font-size: 32px;
+  color: #101827;
+  letter-spacing: -0.8px;
+}
+
+.login-logo p {
+  margin: 4px 0 0;
+  color: #667085;
+  font-size: 14px;
+}
+
+.login-welcome {
+  background: #f1f7ff;
+  border: 1px solid #dbeafe;
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 18px;
+}
+
+.login-welcome h2 {
+  margin: 0 0 5px;
+  font-size: 20px;
+}
+
+.login-welcome p {
+  margin: 0;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.login-brand {
+  margin-top: 18px;
+  text-align: center;
+  color: rgba(15, 23, 42, 0.46);
+  font-size: 13px;
+}
+
+.login-brand strong {
+  color: rgba(15, 23, 42, 0.68);
+}
+
+.login-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 200;
+}
+
+.login-modal-card {
+  width: min(360px, 100%);
+  background: white;
+  border-radius: 24px;
+  padding: 26px;
+  text-align: center;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+}
+
+.login-modal-icon {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 14px;
+  color: white;
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.login-modal-icon.ok {
+  background: #159947;
+}
+
+.login-modal-icon.error {
+  background: #dc2626;
+}
+
+.login-modal-card h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.login-modal-card p {
+  margin: 0 0 18px;
+  color: #667085;
+  line-height: 1.4;
+}
+

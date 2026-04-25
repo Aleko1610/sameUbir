@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CronoVic — Administración</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .abm-page { min-height: 100vh; background: var(--bg); padding: 24px; }
+    .abm-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+    .abm-header-left { display:flex; align-items:center; gap:14px; }
+    .abm-logo { width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg,#1677d2,#159947); display:grid; place-items:center; color:white; font-size:18px; font-weight:900; }
+    .abm-header h1 { margin:0; font-size:24px; }
+    .abm-header p  { margin:2px 0 0; font-size:13px; color:var(--muted); }
+    .abm-panel { background:white; border-radius:var(--radius); box-shadow:var(--shadow); padding:24px; }
+    .abm-panel-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+    .abm-panel-header h2 { margin:0; font-size:20px; }
+    .abm-list { display:grid; gap:10px; }
+    .abm-item { border:1px solid var(--line); border-radius:14px; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fafbfc; }
+    .abm-item-info strong { display:block; font-size:15px; margin-bottom:3px; }
+    .abm-item-info span { font-size:13px; color:var(--muted); line-height:1.4; }
+    .abm-item-actions { display:flex; gap:8px; flex-shrink:0; flex-wrap:wrap; }
+    .abm-item-actions button { padding:8px 14px; border-radius:10px; border:none; font-size:13px; font-weight:700; cursor:pointer; }
+    .abm-empty { text-align:center; padding:32px; color:var(--muted); font-size:15px; background:#f8fafc; border-radius:14px; border:1px dashed var(--line); }
+    .badge { display:inline-block; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:800; }
+    .badge-dev    { background:#ede9fe; color:#6d28d9; }
+    .badge-chofer { background:var(--green-soft); color:var(--green); }
+    .badge-inactivo { background:#fee2e2; color:#991b1b; }
+    .abm-modal { position:fixed; inset:0; background:rgba(15,23,42,.56); display:flex; align-items:center; justify-content:center; padding:18px; z-index:50; }
+    .abm-modal-card { width:min(480px,100%); background:white; border-radius:22px; padding:24px; box-shadow:0 24px 80px rgba(0,0,0,.28); }
+    .abm-modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+    .abm-modal-head h2 { margin:0; font-size:20px; }
+    .nav-links { display:flex; gap:10px; flex-wrap:wrap; }
+  </style>
+</head>
+<body>
+
+<div class="abm-page">
+  <div class="abm-header">
+    <div class="abm-header-left">
+      <div class="abm-logo">CV</div>
+      <div>
+        <h1>CronoVic — Administración</h1>
+        <p>Gestión de usuarios del sistema</p>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="abm.html"   class="btn muted"  style="text-decoration:none;padding:12px 20px;font-size:14px;">Mis datos</a>
+      <a href="index.html" class="btn dark"   style="text-decoration:none;padding:12px 20px;font-size:14px;">← Cronograma</a>
+    </div>
+  </div>
+
+  <div class="abm-panel">
+    <div class="abm-panel-header">
+      <h2>Usuarios</h2>
+      <button class="btn primary" id="btnNuevoUsuario" type="button">+ Nuevo usuario</button>
+    </div>
+    <div class="abm-list" id="listaUsuarios">
+      <div class="abm-empty">Cargando...</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL USUARIO -->
+<div id="modalUsuario" class="abm-modal hidden">
+  <div class="abm-modal-card">
+    <div class="abm-modal-head">
+      <h2 id="tituloModalUsuario">Nuevo usuario</h2>
+      <button class="modal-close" data-close="modalUsuario" type="button">×</button>
+    </div>
+
+    <div class="field">
+      <label>Nombre completo</label>
+      <input id="uNombre" type="text" placeholder="Ej: Carlos Rodríguez">
+    </div>
+    <div class="field">
+      <label>Usuario (para login)</label>
+      <input id="uUsername" type="text" placeholder="Ej: carlos" autocomplete="off">
+    </div>
+    <div class="field">
+      <label id="labelPassword">Contraseña</label>
+      <input id="uPassword" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+    </div>
+    <div class="field" id="fieldPasswordHint" style="display:none;">
+      <small style="color:var(--muted);">Dejá en blanco para no cambiar la contraseña.</small>
+    </div>
+    <div class="field">
+      <label>Rol</label>
+      <select id="uRol">
+        <option value="chofer">Chofer</option>
+        <option value="dev">Dev / Administrador</option>
+      </select>
+    </div>
+
+    <div class="modal-actions">
+      <button id="guardarUsuario" class="btn primary" type="button">Guardar</button>
+      <button class="btn muted" data-close="modalUsuario" type="button">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMACIÓN -->
+<div id="adminConfirmModal" class="login-modal hidden">
+  <div class="login-modal-card">
+    <div class="login-modal-icon error">!</div>
+    <h2 id="adminConfirmTitle"></h2>
+    <p id="adminConfirmText"></p>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button id="adminConfirmBtn" class="btn warning" type="button">Confirmar</button>
+      <button id="adminCancelBtn"  class="btn muted"   type="button">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script src="api.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

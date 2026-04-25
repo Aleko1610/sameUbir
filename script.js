@@ -1,5 +1,5 @@
-const LOGIN_USER = "vic";
-const LOGIN_PASS = "vic2026";
+let usuarioActual = null;
+let cronogramaActualId = null;
 let loginCorrectoPendiente = false;
 
 const $ = (id) => document.getElementById(id);
@@ -28,61 +28,6 @@ let dias = [];
 
 let periodoEditando = null;
 let diaEditando = null;
-
-// ── KEYS ABM ──
-const KEY_CLIENTES  = "cronovic-clientes";
-const KEY_CHOFERES  = "cronovic-choferes";
-const KEY_VEHICULOS = "cronovic-vehiculos";
-
-function cargarDBAbm(key) {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
-
-function cargarSelects() {
-  const clientes  = cargarDBAbm(KEY_CLIENTES);
-  const choferes  = cargarDBAbm(KEY_CHOFERES);
-  const vehiculos = cargarDBAbm(KEY_VEHICULOS);
-
-  const selCliente  = $("cliente");
-  const selChofer   = $("chofer");
-  const selVehiculo = $("vehiculo");
-
-  const valCliente  = selCliente.value;
-  const valChofer   = selChofer.value;
-  const valVehiculo = selVehiculo.value;
-
-  selCliente.innerHTML  = `<option value="">— Seleccioná un cliente —</option>`;
-  selChofer.innerHTML   = `<option value="">— Seleccioná un chofer —</option>`;
-  selVehiculo.innerHTML = `<option value="">— Seleccioná un vehículo —</option>`;
-
-  clientes.forEach((c) => {
-    const opt = document.createElement("option");
-    opt.value = c.nombre;
-    opt.textContent = c.nombre;
-    selCliente.appendChild(opt);
-  });
-
-  choferes.forEach((c) => {
-    const opt = document.createElement("option");
-    opt.value = c.nombre;
-    opt.textContent = c.nombre;
-    selChofer.appendChild(opt);
-  });
-
-  vehiculos.forEach((v) => {
-    const opt = document.createElement("option");
-    opt.value = `${v.marca} ${v.modelo}`;
-    opt.textContent = `${v.marca} ${v.modelo}${v.patente ? ` — ${v.patente}` : ""}`;
-    selVehiculo.appendChild(opt);
-  });
-
-  if (valCliente)  selCliente.value  = valCliente;
-  if (valChofer)   selChofer.value   = valChofer;
-  if (valVehiculo) selVehiculo.value = valVehiculo;
-}
 
 function valor(id) {
   const el = $(id);
@@ -689,50 +634,8 @@ function pintarResumen(items) {
   });
 }
 
-function cargarSelects() {
-  const clientes  = dbCargar("clientes");
-  const choferes  = dbCargar("choferes");
-  const vehiculos = dbCargar("vehiculos");
 
-  const selCliente = $("cliente");
-  const selChofer  = $("chofer");
-  const selVehiculo = $("vehiculo");
-
-  const valorCliente  = selCliente.value;
-  const valorChofer   = selChofer.value;
-  const valorVehiculo = selVehiculo.value;
-
-  selCliente.innerHTML  = `<option value="">— Seleccioná un cliente —</option>`;
-  selChofer.innerHTML   = `<option value="">— Seleccioná un chofer —</option>`;
-  selVehiculo.innerHTML = `<option value="">— Seleccioná un vehículo —</option>`;
-
-  clientes.forEach((c) => {
-    const opt = document.createElement("option");
-    opt.value = c.nombre;
-    opt.textContent = c.nombre;
-    if (c.nombre === valorCliente) opt.selected = true;
-    selCliente.appendChild(opt);
-  });
-
-  choferes.forEach((c) => {
-    const opt = document.createElement("option");
-    opt.value = c.nombre;
-    opt.textContent = c.nombre;
-    if (c.nombre === valorChofer) opt.selected = true;
-    selChofer.appendChild(opt);
-  });
-
-  vehiculos.forEach((v) => {
-    const label = `${v.marca} ${v.modelo}${v.patente ? ` — ${v.patente}` : ""}`;
-    const opt = document.createElement("option");
-    opt.value = `${v.marca} ${v.modelo}`;
-    opt.textContent = label;
-    if (opt.value === valorVehiculo) opt.selected = true;
-    selVehiculo.appendChild(opt);
-  });
-}
-
-
+function actualizarModo() {
   const modo = valor("modo");
 
   $("abrirModalPeriodo").classList.toggle("hidden", modo !== "periodo");
@@ -759,63 +662,18 @@ function actualizarTodo() {
   }
 }
 
-function guardarLocal() {
-  const data = {
-    cliente: valor("cliente"),
-    chofer: valor("chofer"),
-    vehiculo: valor("vehiculo"),
-    modo: valor("modo"),
-    periodos,
-    dias
-  };
-
-  localStorage.setItem("cronograma-v4", JSON.stringify(data));
-  mostrarLoginModal("ok", "Guardado", "Cronograma guardado en este dispositivo.");
-}
-
-function cargarLocal() {
-  const raw = localStorage.getItem("cronograma-v4");
-
-  if (!raw) {
-    setValor("vehiculo", "Citroën C3");
-    actualizarTodo();
-    return;
-  }
-
-  try {
-    const data = JSON.parse(raw);
-
-    setValor("cliente", data.cliente);
-    setValor("chofer", data.chofer);
-    setValor("vehiculo", data.vehiculo || "Citroën C3");
-    setValor("modo", data.modo || "periodo");
-
-    periodos = Array.isArray(data.periodos) ? data.periodos : [];
-    dias = Array.isArray(data.dias) ? data.dias : [];
-  } catch (e) {
-    console.warn("Datos guardados corruptos, se reinicia el cronograma.", e);
-    localStorage.removeItem("cronograma-v4");
-    setValor("vehiculo", "Citroën C3");
-    periodos = [];
-    dias = [];
-  }
-
-  actualizarTodo();
-}
-
 function limpiarTodo() {
   mostrarConfirm(
     "Limpiar todo",
     "¿Seguro que querés limpiar todo? Se perderán los datos no guardados.",
     () => {
-      localStorage.removeItem("cronograma-v4");
-
       periodos = [];
       dias = [];
+      cronogramaActualId = null;
 
       setValor("cliente", "");
       setValor("chofer", "");
-      setValor("vehiculo", "Citroën C3");
+      setValor("vehiculo", "");
       setValor("modo", "periodo");
 
       limpiarPeriodoFormulario();
@@ -876,9 +734,11 @@ $("guardarDia").addEventListener("click", agregarOActualizarDia);
 
 $("guardar").addEventListener("click", guardarLocal);
 $("descargar").addEventListener("click", descargarImagen);
+$("descargarDesdePreview").addEventListener("click", () => { cerrarModal("previewModal"); descargarImagen(); });
 $("limpiar").addEventListener("click", limpiarTodo);
 $("verPreview").addEventListener("click", abrirPreviewMobile);
 
+// Mostrar app-solo en lugar de app
 document.querySelectorAll("[data-close]").forEach((btn) => {
   btn.addEventListener("click", () => cerrarModal(btn.dataset.close));
 });
@@ -932,10 +792,13 @@ function cerrarLoginModal() {
 
   if (loginCorrectoPendiente) {
     $("loginPage").classList.add("hidden");
-    $("app").classList.remove("hidden");
-    localStorage.setItem("cronovic-login", "ok");
+    const appEl = $("app-solo") || $("app");
+    appEl.classList.remove("hidden");
     loginCorrectoPendiente = false;
-    actualizarTodo();
+    cargarSelects().then(() => {
+      actualizarBloquesDia();
+      actualizarTodo();
+    });
     return;
   }
 
@@ -962,19 +825,108 @@ function intentarLogin() {
     return;
   }
 
-  if (user === LOGIN_USER && pass === LOGIN_PASS) {
-    loginCorrectoPendiente = true;
-    mostrarLoginModal("ok", "Ingreso correcto", "Bienvenida a CronoVic.");
-    return;
-  }
+  $("btnLogin").disabled = true;
 
-  mostrarLoginModal("error", "Acceso denegado", "Usuario o contraseña incorrectos.");
+  Auth.login(user, pass)
+    .then((sesion) => {
+      usuarioActual = sesion;
+      loginCorrectoPendiente = true;
+      mostrarLoginModal("ok", "Ingreso correcto", `Bienvenido/a, ${sesion.nombre}.`);
+    })
+    .catch((err) => {
+      mostrarLoginModal("error", "Acceso denegado", err.message || "Usuario o contraseña incorrectos.");
+    })
+    .finally(() => {
+      $("btnLogin").disabled = false;
+    });
 }
 
 function verificarSesionLogin() {
-  if (localStorage.getItem("cronovic-login") === "ok") {
-    $("loginPage").classList.add("hidden");
-    $("app").classList.remove("hidden");
+  Auth.sesion()
+    .then((sesion) => {
+      usuarioActual = sesion;
+      $("loginPage").classList.add("hidden");
+      $("app-solo") ? $("app-solo").classList.remove("hidden") : $("app").classList.remove("hidden");
+      cargarSelects().then(() => {
+        actualizarBloquesDia();
+        actualizarTodo();
+      });
+    })
+    .catch(() => {
+      $("loginPage").classList.remove("hidden");
+      $("app-solo") ? $("app-solo").classList.add("hidden") : $("app").classList.add("hidden");
+    });
+}
+
+async function guardarLocal() {
+  const datos = {
+    cliente:  valor("cliente"),
+    chofer:   valor("chofer"),
+    vehiculo: valor("vehiculo"),
+    modo:     valor("modo"),
+    periodos,
+    dias,
+  };
+
+  try {
+    if (cronogramaActualId) {
+      await Cronogramas.actualizar(cronogramaActualId, datos);
+    } else {
+      const res = await Cronogramas.guardar(datos);
+      cronogramaActualId = res.id;
+    }
+    mostrarLoginModal("ok", "Guardado", "Cronograma guardado correctamente.");
+  } catch (err) {
+    mostrarLoginModal("error", "Error al guardar", err.message || "No se pudo guardar el cronograma.");
+  }
+}
+
+async function cargarSelects() {
+  try {
+    const [clientes, choferes, vehiculos] = await Promise.all([
+      Clientes.listar(),
+      Choferes.listar(),
+      Vehiculos.listar(),
+    ]);
+
+    const selCliente  = $("cliente");
+    const selChofer   = $("chofer");
+    const selVehiculo = $("vehiculo");
+
+    const valCliente  = selCliente.value;
+    const valChofer   = selChofer.value;
+    const valVehiculo = selVehiculo.value;
+
+    selCliente.innerHTML  = `<option value="">— Seleccioná un cliente —</option>`;
+    selChofer.innerHTML   = `<option value="">— Seleccioná un chofer —</option>`;
+    selVehiculo.innerHTML = `<option value="">— Seleccioná un vehículo —</option>`;
+
+    clientes.forEach((c) => {
+      const opt = document.createElement("option");
+      opt.value = c.nombre;
+      opt.textContent = c.nombre;
+      selCliente.appendChild(opt);
+    });
+
+    choferes.forEach((c) => {
+      const opt = document.createElement("option");
+      opt.value = c.nombre;
+      opt.textContent = c.nombre;
+      selChofer.appendChild(opt);
+    });
+
+    vehiculos.forEach((v) => {
+      const opt = document.createElement("option");
+      opt.value = `${v.marca} ${v.modelo}`;
+      opt.textContent = `${v.marca} ${v.modelo}${v.patente ? ` — ${v.patente}` : ""}`;
+      selVehiculo.appendChild(opt);
+    });
+
+    if (valCliente)  selCliente.value  = valCliente;
+    if (valChofer)   selChofer.value   = valChofer;
+    if (valVehiculo) selVehiculo.value = valVehiculo;
+  } catch (err) {
+    console.warn("No se pudieron cargar los selects:", err.message);
   }
 }
 
@@ -982,21 +934,12 @@ $("btnLogin").addEventListener("click", intentarLogin);
 $("loginModalBtn").addEventListener("click", cerrarLoginModal);
 $("loginModalCancelBtn").addEventListener("click", cancelarConfirm);
 
-$("loginUser").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") intentarLogin();
-});
-
-$("loginPass").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") intentarLogin();
-});
+$("loginUser").addEventListener("keydown", (e) => { if (e.key === "Enter") intentarLogin(); });
+$("loginPass").addEventListener("keydown", (e) => { if (e.key === "Enter") intentarLogin(); });
 
 $("cerrarSesion").addEventListener("click", () => {
-  localStorage.removeItem("cronovic-login");
-  location.reload();
+  Auth.logout().finally(() => location.reload());
 });
 
+// ── INIT ──
 verificarSesionLogin();
-cargarLocal();
-cargarSelects();
-actualizarBloquesDia();
-actualizarTodo();

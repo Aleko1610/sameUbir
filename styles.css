@@ -35,6 +35,81 @@ body {
   min-height: 100vh;
 }
 
+/* ── LAYOUT SOLO (sin panel preview) ── */
+.app-solo {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.solo-topbar {
+  background: white;
+  border-bottom: 1px solid var(--line);
+  padding: 0 28px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.solo-back {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.solo-back:hover { color: var(--blue); }
+
+.solo-topbar h1 {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
+  flex: 1;
+}
+
+.solo-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.solo-actions .btn {
+  padding: 9px 16px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+
+.solo-body {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 28px;
+}
+
+.solo-form {
+  width: 100%;
+  max-width: 760px;
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px;
+  height: fit-content;
+}
+
+.form-row-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 4px;
+}
+
 .form-panel,
 .preview-panel {
   background: var(--panel);
@@ -217,7 +292,45 @@ body {
   font-size: 14px;
 }
 
-/* ── PANEL PREVIEW ── */
+/* ── MODAL PREVIEW GRANDE ── */
+.preview-modal {
+  align-items: flex-start;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.preview-modal-card {
+  background: white;
+  border-radius: 20px;
+  width: min(1140px, 100%);
+  margin: 0 auto;
+  box-shadow: 0 24px 80px rgba(0,0,0,.25);
+  overflow: hidden;
+}
+
+.preview-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--line);
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.preview-modal-head h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.preview-modal-body {
+  padding: 24px;
+  overflow-x: auto;
+  background: var(--bg);
+}
 .preview-panel {
   padding: 24px;
   overflow-x: auto;
@@ -675,6 +788,31 @@ body {
   .grid-2,
   .modal-actions {
     grid-template-columns: 1fr;
+  }
+
+  .form-row-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .solo-topbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 12px 16px;
+    gap: 10px;
+  }
+
+  .solo-topbar h1 { font-size: 15px; }
+
+  .solo-actions {
+    width: 100%;
+  }
+
+  .solo-body {
+    padding: 14px;
+  }
+
+  .solo-form {
+    padding: 18px;
   }
 
   .cronograma {

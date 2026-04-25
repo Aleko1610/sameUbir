@@ -1,0 +1,19 @@
+{
+  "name": "CronoVic — Cronogramas de viajes",
+  "short_name": "CronoVic",
+  "description": "Generá, gestioná y exportá cronogramas de viajes",
+  "start_url": "/sameUbir/dash.html",
+  "scope": "/sameUbir/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#1677d2",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%231677d2'/><text x='96' y='130' text-anchor='middle' font-family='monospace' font-size='90' font-weight='bold' fill='white'>CV</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

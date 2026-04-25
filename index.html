@@ -43,70 +43,71 @@
   </div>
 </section>
 
-<main id="app" class="app hidden">
-  <section class="form-panel">
+<main id="app" class="app-solo hidden">
+  <div class="solo-topbar">
+    <a href="dash.html" class="solo-back">← Dashboard</a>
     <h1>Generador de Cronogramas</h1>
-    <p>Cargá cliente, chofer, viajes y descargá una imagen lista para enviar.</p>
-    <a href="abm.html" class="btn primary" style="display:block;text-align:center;text-decoration:none;margin-bottom:16px;">⚙ Gestionar clientes, choferes y vehículos</a>
-
-    <div style="margin-bottom:14px;">
-      <a href="abm.html" class="btn primary" style="text-decoration:none;display:block;text-align:center;padding:11px 16px;font-size:14px;">⚙ Gestionar clientes, choferes y vehículos</a>
+    <div class="solo-actions">
+      <button id="verPreview"  class="btn primary"  type="button">👁 Vista previa</button>
+      <button id="guardar"     class="btn dark hidden" type="button">Guardar</button>
+      <button id="descargar"   class="btn success"  type="button">⬇ Descargar imagen</button>
+      <button id="limpiar"     class="btn warning"  type="button">Limpiar</button>
+      <button id="cerrarSesion" class="btn dark"    type="button">Cerrar sesión</button>
     </div>
+  </div>
 
-    <div class="field">
-      <label>Cliente</label>
-      <select id="cliente">
-        <option value="">— Seleccioná un cliente —</option>
-      </select>
+  <div class="solo-body">
+    <div class="solo-form">
+
+      <div class="form-row-3">
+        <div class="field">
+          <label>Cliente</label>
+          <select id="cliente">
+            <option value="">— Seleccioná un cliente —</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Chofer</label>
+          <select id="chofer">
+            <option value="">— Seleccioná un chofer —</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Vehículo</label>
+          <select id="vehiculo">
+            <option value="">— Seleccioná un vehículo —</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field" style="max-width:280px">
+        <label>Tipo de cronograma</label>
+        <select id="modo">
+          <option value="periodo">Por período</option>
+          <option value="dia">Por día</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button id="abrirModalPeriodo" class="btn primary" type="button">+ Agregar período</button>
+        <button id="abrirModalDia"     class="btn primary hidden" type="button">+ Agregar día</button>
+      </div>
+
+      <section id="listaPeriodosBox" class="list-box">
+        <h2>Períodos cargados</h2>
+        <div id="listaPeriodos"></div>
+      </section>
+
+      <section id="listaDiasBox" class="list-box hidden">
+        <h2>Días cargados</h2>
+        <div id="listaDias"></div>
+      </section>
+
     </div>
+  </div>
 
-    <div class="field">
-      <label>Chofer</label>
-      <select id="chofer">
-        <option value="">— Seleccioná un chofer —</option>
-      </select>
-    </div>
-
-    <div class="field">
-      <label>Vehículo</label>
-      <select id="vehiculo">
-        <option value="">— Seleccioná un vehículo —</option>
-      </select>
-    </div>
-
-    <div class="field">
-      <label>Tipo de cronograma</label>
-      <select id="modo">
-        <option value="periodo">Por período</option>
-        <option value="dia">Por día</option>
-      </select>
-    </div>
-
-    <div class="actions">
-      <button id="abrirModalPeriodo" class="btn primary" type="button">+ Agregar período</button>
-      <button id="abrirModalDia" class="btn primary hidden" type="button">+ Agregar día</button>
-    </div>
-
-    <section id="listaPeriodosBox" class="list-box">
-      <h2>Períodos cargados</h2>
-      <div id="listaPeriodos"></div>
-    </section>
-
-    <section id="listaDiasBox" class="list-box hidden">
-      <h2>Días cargados</h2>
-      <div id="listaDias"></div>
-    </section>
-
-    <div class="actions">
-      <button id="verPreview" class="btn primary" type="button">Ver vista previa</button>
-      <button id="guardar" class="btn dark hidden" type="button">Guardar local</button>
-      <button id="descargar" class="btn success" type="button">Descargar imagen</button>
-      <button id="limpiar" class="btn warning" type="button">Limpiar todo</button>
-      <button id="cerrarSesion" class="btn dark" type="button">Cerrar sesión</button>
-    </div>
-  </section>
-
-  <section id="previewPanel" class="preview-panel">
+  <!-- El cronograma se mantiene en el DOM pero oculto — lo usa html2canvas y el modal de preview -->
+  <div style="position:absolute;left:-9999px;top:0;pointer-events:none;opacity:0;" aria-hidden="true">
     <div id="cronograma" class="cronograma">
       <header class="preview-header">
         <h2>CRONOGRAMA DE VIAJES</h2>
@@ -115,24 +116,21 @@
           <span><strong>Chofer:</strong> <span id="previewChofer">Sin especificar</span></span>
         </div>
       </header>
-
       <section id="previewContenido" class="preview-content"></section>
-
       <footer class="preview-footer">
         <div class="preview-footer-resumen">
           <h3><img src="icons/icon-calendario.png" class="ico" alt=""> Resumen</h3>
           <ul id="previewResumen"></ul>
         </div>
-
         <div class="car-card">
           <img src="img/citroen-c3.png" alt="Vehículo">
           <span id="previewVehiculo">Citroën C3</span>
         </div>
       </footer>
-
       <div class="watermark">Diseñado por LOLOSTECH.com</div>
     </div>
-  </section>
+  </div>
+
 </main>
 
 <div id="modalPeriodo" class="modal hidden">
@@ -282,13 +280,17 @@
 </div>
 
 <div id="previewModal" class="modal preview-modal hidden">
-  <div class="modal-card preview-modal-card">
-    <div class="modal-head">
-      <h2>Vista previa</h2>
-      <button class="modal-close" data-close="previewModal">×</button>
+  <div class="preview-modal-card">
+    <div class="preview-modal-head">
+      <h2>Vista previa del cronograma</h2>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="descargarDesdePreview" class="btn success" type="button" style="padding:8px 16px;font-size:13px;">⬇ Descargar imagen</button>
+        <button class="modal-close" data-close="previewModal" style="font-size:24px;background:none;border:none;cursor:pointer;color:#667085;">×</button>
+      </div>
     </div>
-
-    <div id="previewMobileTarget"></div>
+    <div class="preview-modal-body">
+      <div id="previewMobileTarget"></div>
+    </div>
   </div>
 </div>
 
@@ -305,7 +307,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script src="db.js"></script>
+<script src="api.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

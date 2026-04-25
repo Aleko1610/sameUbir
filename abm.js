@@ -1,426 +1,239 @@
-// ── STORAGE KEYS ──
-const KEY_CLIENTES  = "cronovic-clientes";
-const KEY_CHOFERES  = "cronovic-choferes";
-const KEY_VEHICULOS = "cronovic-vehiculos";
-
 const $ = (id) => document.getElementById(id);
-
-// ── UTILIDADES ──
-function cargarDB(key) {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function guardarDB(key, data) {
-  localStorage.setItem(key, JSON.stringify(data));
-}
 
 function sanitizar(texto) {
   if (!texto) return "";
-  return texto
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+  return texto.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 }
-
-function valor(id) {
-  const el = $(id);
-  return el ? el.value.trim() : "";
-}
-
-function setValor(id, val) {
-  const el = $(id);
-  if (el) el.value = val || "";
-}
-
-function abrirModal(id) { $(id).classList.remove("hidden"); }
+function valor(id)       { const el=$(id); return el ? el.value.trim() : ""; }
+function setValor(id,val){ const el=$(id); if(el) el.value = val||""; }
+function abrirModal(id)  { $(id).classList.remove("hidden"); }
 function cerrarModal(id) { $(id).classList.add("hidden"); }
 
-// ── TABS ──
+// ── TABS ────────────────────────────────────
 document.querySelectorAll(".tab-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-    document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
     btn.classList.add("active");
     $(`tab-${btn.dataset.tab}`).classList.add("active");
   });
 });
 
-// ── CERRAR MODALES ──
-document.querySelectorAll("[data-close]").forEach((btn) => {
-  btn.addEventListener("click", () => cerrarModal(btn.dataset.close));
+document.querySelectorAll("[data-close]").forEach(btn=>{
+  btn.addEventListener("click",()=>cerrarModal(btn.dataset.close));
+});
+document.querySelectorAll(".abm-modal").forEach(modal=>{
+  modal.addEventListener("click",(e)=>{ if(e.target===modal) cerrarModal(modal.id); });
 });
 
-document.querySelectorAll(".abm-modal").forEach((modal) => {
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) cerrarModal(modal.id);
-  });
-});
-
-// ── CONFIRM MODAL ──
+// ── MODALES DE FEEDBACK ─────────────────────
 let _confirmCallback = null;
 
 function mostrarConfirm(titulo, texto, onConfirmar) {
   $("abmConfirmTitle").textContent = titulo;
   $("abmConfirmText").textContent  = texto;
+  $("abmConfirmBtn").textContent   = "Eliminar";
+  $("abmCancelBtn").classList.remove("hidden");
   _confirmCallback = onConfirmar;
   $("abmConfirmModal").classList.remove("hidden");
 }
-
-$("abmConfirmBtn").addEventListener("click", () => {
-  $("abmConfirmModal").classList.add("hidden");
-  if (_confirmCallback) { _confirmCallback(); _confirmCallback = null; }
-});
-
-$("abmCancelBtn").addEventListener("click", () => {
-  $("abmConfirmModal").classList.add("hidden");
-  _confirmCallback = null;
-});
-
-// ── MODAL NOTIFICACIÓN ──
 function mostrarNota(titulo, texto) {
-  // Reutiliza el modal de confirmación como simple aviso
   $("abmConfirmTitle").textContent = titulo;
   $("abmConfirmText").textContent  = texto;
-  _confirmCallback = null;
-  $("abmConfirmBtn").textContent = "Aceptar";
+  $("abmConfirmBtn").textContent   = "Aceptar";
   $("abmCancelBtn").classList.add("hidden");
+  _confirmCallback = null;
   $("abmConfirmModal").classList.remove("hidden");
-  $("abmConfirmBtn").textContent = "Aceptar";
 }
+$("abmConfirmBtn").addEventListener("click",()=>{
+  $("abmConfirmModal").classList.add("hidden");
+  if(_confirmCallback){ _confirmCallback(); _confirmCallback=null; }
+});
+$("abmCancelBtn").addEventListener("click",()=>{
+  $("abmConfirmModal").classList.add("hidden");
+  _confirmCallback=null;
+});
 
-// Restaurar texto del botón al cerrar
-$("abmConfirmBtn").addEventListener("click", () => {
-  $("abmCancelBtn").classList.remove("hidden");
-  $("abmConfirmBtn").textContent = "Eliminar";
-}, { capture: false });
-
+function setLoading(id){ $(id).innerHTML=`<div class="abm-empty">Cargando...</div>`; }
 
 // ══════════════════════════════════════════
 // CLIENTES
 // ══════════════════════════════════════════
-let clientes = cargarDB(KEY_CLIENTES);
 let clienteEditando = null;
 
-function pintarClientes() {
-  const contenedor = $("listaClientes");
-  contenedor.innerHTML = "";
+async function pintarClientes() {
+  setLoading("listaClientes");
+  try {
+    const lista = await Clientes.listar();
+    const c = $("listaClientes");
+    c.innerHTML = "";
+    if (!lista.length) { c.innerHTML=`<div class="abm-empty">Todavía no hay clientes cargados.</div>`; return; }
+    lista.forEach(cl => {
+      const item = document.createElement("div");
+      item.className = "abm-item";
+      item.innerHTML = `
+        <div class="abm-item-info">
+          <strong>${sanitizar(cl.nombre)}</strong>
+          <span>${sanitizar(cl.telefono)||"Sin teléfono"} · ${sanitizar(cl.direccion)||"Sin dirección"}</span>
+        </div><div class="abm-item-actions"></div>`;
+      const acc = item.querySelector(".abm-item-actions");
+      const bE = document.createElement("button"); bE.className="edit-btn"; bE.textContent="Modificar";
+      bE.addEventListener("click",()=>editarCliente(cl));
+      const bD = document.createElement("button"); bD.className="delete-btn"; bD.textContent="Eliminar";
+      bD.addEventListener("click",()=>eliminarCliente(cl));
+      acc.appendChild(bE); acc.appendChild(bD); c.appendChild(item);
+    });
+  } catch(err){ $("listaClientes").innerHTML=`<div class="abm-empty">Error: ${sanitizar(err.message)}</div>`; }
+}
 
-  if (clientes.length === 0) {
-    contenedor.innerHTML = `<div class="abm-empty">Todavía no hay clientes cargados.</div>`;
-    return;
-  }
-
-  clientes.forEach((c, i) => {
-    const item = document.createElement("div");
-    item.className = "abm-item";
-
-    item.innerHTML = `
-      <div class="abm-item-info">
-        <strong>${sanitizar(c.nombre)}</strong>
-        <span>${sanitizar(c.telefono) || "Sin teléfono"} · ${sanitizar(c.direccion) || "Sin dirección"}</span>
-      </div>
-      <div class="abm-item-actions"></div>
-    `;
-
-    const acciones = item.querySelector(".abm-item-actions");
-
-    const btnEditar = document.createElement("button");
-    btnEditar.className = "edit-btn";
-    btnEditar.textContent = "Modificar";
-    btnEditar.addEventListener("click", () => editarCliente(i));
-
-    const btnEliminar = document.createElement("button");
-    btnEliminar.className = "delete-btn";
-    btnEliminar.textContent = "Eliminar";
-    btnEliminar.addEventListener("click", () => eliminarCliente(i));
-
-    acciones.appendChild(btnEditar);
-    acciones.appendChild(btnEliminar);
-    contenedor.appendChild(item);
+function limpiarModalCliente(){
+  setValor("cNombre",""); setValor("cTelefono",""); setValor("cDireccion","");
+  clienteEditando=null; $("tituloModalCliente").textContent="Nuevo cliente"; $("guardarCliente").textContent="Guardar";
+}
+function editarCliente(cl){
+  setValor("cNombre",cl.nombre); setValor("cTelefono",cl.telefono); setValor("cDireccion",cl.direccion);
+  clienteEditando=cl.id; $("tituloModalCliente").textContent="Modificar cliente"; $("guardarCliente").textContent="Guardar cambios";
+  abrirModal("modalCliente");
+}
+function eliminarCliente(cl){
+  mostrarConfirm("Eliminar cliente",`¿Eliminar a "${cl.nombre}"?`, async()=>{
+    try{ await Clientes.eliminar(cl.id); pintarClientes(); }catch(err){ mostrarNota("Error",err.message); }
   });
 }
-
-function limpiarModalCliente() {
-  setValor("cNombre", "");
-  setValor("cTelefono", "");
-  setValor("cDireccion", "");
-  clienteEditando = null;
-  $("tituloModalCliente").textContent = "Nuevo cliente";
-  $("guardarCliente").textContent = "Guardar";
-}
-
-function editarCliente(i) {
-  const c = clientes[i];
-  setValor("cNombre", c.nombre);
-  setValor("cTelefono", c.telefono);
-  setValor("cDireccion", c.direccion);
-  clienteEditando = i;
-  $("tituloModalCliente").textContent = "Modificar cliente";
-  $("guardarCliente").textContent = "Guardar cambios";
-  abrirModal("modalCliente");
-}
-
-function eliminarCliente(i) {
-  mostrarConfirm(
-    "Eliminar cliente",
-    `¿Seguro que querés eliminar a "${clientes[i].nombre}"?`,
-    () => {
-      clientes.splice(i, 1);
-      guardarDB(KEY_CLIENTES, clientes);
-      pintarClientes();
-    }
-  );
-}
-
-$("btnNuevoCliente").addEventListener("click", () => {
-  limpiarModalCliente();
-  abrirModal("modalCliente");
+$("btnNuevoCliente").addEventListener("click",()=>{ limpiarModalCliente(); abrirModal("modalCliente"); });
+$("guardarCliente").addEventListener("click", async()=>{
+  const nombre=valor("cNombre");
+  if(!nombre){ mostrarNota("Error","El nombre es obligatorio."); return; }
+  const data={ nombre, telefono:valor("cTelefono"), direccion:valor("cDireccion") };
+  try{
+    clienteEditando ? await Clientes.editar(clienteEditando,data) : await Clientes.crear(data);
+    cerrarModal("modalCliente"); limpiarModalCliente(); pintarClientes();
+  }catch(err){ mostrarNota("Error",err.message); }
 });
-
-$("guardarCliente").addEventListener("click", () => {
-  const nombre = valor("cNombre");
-  if (!nombre) { alert("El nombre es obligatorio."); return; }
-
-  const nuevo = {
-    nombre,
-    telefono:  valor("cTelefono"),
-    direccion: valor("cDireccion"),
-  };
-
-  if (clienteEditando !== null) {
-    clientes[clienteEditando] = nuevo;
-  } else {
-    clientes.push(nuevo);
-  }
-
-  guardarDB(KEY_CLIENTES, clientes);
-  cerrarModal("modalCliente");
-  limpiarModalCliente();
-  pintarClientes();
-});
-
 
 // ══════════════════════════════════════════
 // CHOFERES
 // ══════════════════════════════════════════
-let choferes = cargarDB(KEY_CHOFERES);
 let choferEditando = null;
 
-function pintarChoferes() {
-  const contenedor = $("listaChoferes");
-  contenedor.innerHTML = "";
+async function pintarChoferes() {
+  setLoading("listaChoferes");
+  try {
+    const lista = await Choferes.listar();
+    const c = $("listaChoferes");
+    c.innerHTML = "";
+    if (!lista.length) { c.innerHTML=`<div class="abm-empty">Todavía no hay choferes cargados.</div>`; return; }
+    lista.forEach(ch => {
+      const item = document.createElement("div");
+      item.className = "abm-item";
+      item.innerHTML = `
+        <div class="abm-item-info">
+          <strong>${sanitizar(ch.nombre)}</strong>
+          <span>${sanitizar(ch.telefono)||"Sin teléfono"} · Licencia: ${sanitizar(ch.licencia)||"Sin licencia"}</span>
+        </div><div class="abm-item-actions"></div>`;
+      const acc = item.querySelector(".abm-item-actions");
+      const bE = document.createElement("button"); bE.className="edit-btn"; bE.textContent="Modificar";
+      bE.addEventListener("click",()=>editarChofer(ch));
+      const bD = document.createElement("button"); bD.className="delete-btn"; bD.textContent="Eliminar";
+      bD.addEventListener("click",()=>eliminarChofer(ch));
+      acc.appendChild(bE); acc.appendChild(bD); c.appendChild(item);
+    });
+  } catch(err){ $("listaChoferes").innerHTML=`<div class="abm-empty">Error: ${sanitizar(err.message)}</div>`; }
+}
 
-  if (choferes.length === 0) {
-    contenedor.innerHTML = `<div class="abm-empty">Todavía no hay choferes cargados.</div>`;
-    return;
-  }
-
-  choferes.forEach((c, i) => {
-    const item = document.createElement("div");
-    item.className = "abm-item";
-
-    item.innerHTML = `
-      <div class="abm-item-info">
-        <strong>${sanitizar(c.nombre)}</strong>
-        <span>${sanitizar(c.telefono) || "Sin teléfono"} · Licencia: ${sanitizar(c.licencia) || "Sin licencia"}</span>
-      </div>
-      <div class="abm-item-actions"></div>
-    `;
-
-    const acciones = item.querySelector(".abm-item-actions");
-
-    const btnEditar = document.createElement("button");
-    btnEditar.className = "edit-btn";
-    btnEditar.textContent = "Modificar";
-    btnEditar.addEventListener("click", () => editarChofer(i));
-
-    const btnEliminar = document.createElement("button");
-    btnEliminar.className = "delete-btn";
-    btnEliminar.textContent = "Eliminar";
-    btnEliminar.addEventListener("click", () => eliminarChofer(i));
-
-    acciones.appendChild(btnEditar);
-    acciones.appendChild(btnEliminar);
-    contenedor.appendChild(item);
+function limpiarModalChofer(){
+  setValor("chNombre",""); setValor("chTelefono",""); setValor("chLicencia","");
+  choferEditando=null; $("tituloModalChofer").textContent="Nuevo chofer"; $("guardarChofer").textContent="Guardar";
+}
+function editarChofer(ch){
+  setValor("chNombre",ch.nombre); setValor("chTelefono",ch.telefono); setValor("chLicencia",ch.licencia);
+  choferEditando=ch.id; $("tituloModalChofer").textContent="Modificar chofer"; $("guardarChofer").textContent="Guardar cambios";
+  abrirModal("modalChofer");
+}
+function eliminarChofer(ch){
+  mostrarConfirm("Eliminar chofer",`¿Eliminar a "${ch.nombre}"?`, async()=>{
+    try{ await Choferes.eliminar(ch.id); pintarChoferes(); }catch(err){ mostrarNota("Error",err.message); }
   });
 }
-
-function limpiarModalChofer() {
-  setValor("chNombre", "");
-  setValor("chTelefono", "");
-  setValor("chLicencia", "");
-  choferEditando = null;
-  $("tituloModalChofer").textContent = "Nuevo chofer";
-  $("guardarChofer").textContent = "Guardar";
-}
-
-function editarChofer(i) {
-  const c = choferes[i];
-  setValor("chNombre", c.nombre);
-  setValor("chTelefono", c.telefono);
-  setValor("chLicencia", c.licencia);
-  choferEditando = i;
-  $("tituloModalChofer").textContent = "Modificar chofer";
-  $("guardarChofer").textContent = "Guardar cambios";
-  abrirModal("modalChofer");
-}
-
-function eliminarChofer(i) {
-  mostrarConfirm(
-    "Eliminar chofer",
-    `¿Seguro que querés eliminar a "${choferes[i].nombre}"?`,
-    () => {
-      choferes.splice(i, 1);
-      guardarDB(KEY_CHOFERES, choferes);
-      pintarChoferes();
-    }
-  );
-}
-
-$("btnNuevoChofer").addEventListener("click", () => {
-  limpiarModalChofer();
-  abrirModal("modalChofer");
+$("btnNuevoChofer").addEventListener("click",()=>{ limpiarModalChofer(); abrirModal("modalChofer"); });
+$("guardarChofer").addEventListener("click", async()=>{
+  const nombre=valor("chNombre");
+  if(!nombre){ mostrarNota("Error","El nombre es obligatorio."); return; }
+  const data={ nombre, telefono:valor("chTelefono"), licencia:valor("chLicencia") };
+  try{
+    choferEditando ? await Choferes.editar(choferEditando,data) : await Choferes.crear(data);
+    cerrarModal("modalChofer"); limpiarModalChofer(); pintarChoferes();
+  }catch(err){ mostrarNota("Error",err.message); }
 });
-
-$("guardarChofer").addEventListener("click", () => {
-  const nombre = valor("chNombre");
-  if (!nombre) { alert("El nombre es obligatorio."); return; }
-
-  const nuevo = {
-    nombre,
-    telefono: valor("chTelefono"),
-    licencia: valor("chLicencia"),
-  };
-
-  if (choferEditando !== null) {
-    choferes[choferEditando] = nuevo;
-  } else {
-    choferes.push(nuevo);
-  }
-
-  guardarDB(KEY_CHOFERES, choferes);
-  cerrarModal("modalChofer");
-  limpiarModalChofer();
-  pintarChoferes();
-});
-
 
 // ══════════════════════════════════════════
 // VEHÍCULOS
 // ══════════════════════════════════════════
-let vehiculos = cargarDB(KEY_VEHICULOS);
 let vehiculoEditando = null;
 
-function pintarVehiculos() {
-  const contenedor = $("listaVehiculos");
-  contenedor.innerHTML = "";
+async function pintarVehiculos() {
+  setLoading("listaVehiculos");
+  try {
+    const lista = await Vehiculos.listar();
+    const c = $("listaVehiculos");
+    c.innerHTML = "";
+    if (!lista.length) { c.innerHTML=`<div class="abm-empty">Todavía no hay vehículos cargados.</div>`; return; }
+    lista.forEach(v => {
+      const item = document.createElement("div");
+      item.className = "abm-item";
+      item.innerHTML = `
+        <div class="abm-item-info">
+          <strong>${sanitizar(v.marca)} ${sanitizar(v.modelo)}</strong>
+          <span>Patente: ${sanitizar(v.patente)||"-"} · Año: ${sanitizar(v.anio)||"-"}</span>
+        </div><div class="abm-item-actions"></div>`;
+      const acc = item.querySelector(".abm-item-actions");
+      const bE = document.createElement("button"); bE.className="edit-btn"; bE.textContent="Modificar";
+      bE.addEventListener("click",()=>editarVehiculo(v));
+      const bD = document.createElement("button"); bD.className="delete-btn"; bD.textContent="Eliminar";
+      bD.addEventListener("click",()=>eliminarVehiculo(v));
+      acc.appendChild(bE); acc.appendChild(bD); c.appendChild(item);
+    });
+  } catch(err){ $("listaVehiculos").innerHTML=`<div class="abm-empty">Error: ${sanitizar(err.message)}</div>`; }
+}
 
-  if (vehiculos.length === 0) {
-    contenedor.innerHTML = `<div class="abm-empty">Todavía no hay vehículos cargados.</div>`;
-    return;
-  }
-
-  vehiculos.forEach((v, i) => {
-    const item = document.createElement("div");
-    item.className = "abm-item";
-
-    item.innerHTML = `
-      <div class="abm-item-info">
-        <strong>${sanitizar(v.marca)} ${sanitizar(v.modelo)}</strong>
-        <span>Patente: ${sanitizar(v.patente) || "-"} · Año: ${sanitizar(v.anio) || "-"}</span>
-      </div>
-      <div class="abm-item-actions"></div>
-    `;
-
-    const acciones = item.querySelector(".abm-item-actions");
-
-    const btnEditar = document.createElement("button");
-    btnEditar.className = "edit-btn";
-    btnEditar.textContent = "Modificar";
-    btnEditar.addEventListener("click", () => editarVehiculo(i));
-
-    const btnEliminar = document.createElement("button");
-    btnEliminar.className = "delete-btn";
-    btnEliminar.textContent = "Eliminar";
-    btnEliminar.addEventListener("click", () => eliminarVehiculo(i));
-
-    acciones.appendChild(btnEditar);
-    acciones.appendChild(btnEliminar);
-    contenedor.appendChild(item);
+function limpiarModalVehiculo(){
+  setValor("vMarca",""); setValor("vModelo",""); setValor("vPatente",""); setValor("vAnio","");
+  vehiculoEditando=null; $("tituloModalVehiculo").textContent="Nuevo vehículo"; $("guardarVehiculo").textContent="Guardar";
+}
+function editarVehiculo(v){
+  setValor("vMarca",v.marca); setValor("vModelo",v.modelo); setValor("vPatente",v.patente); setValor("vAnio",v.anio);
+  vehiculoEditando=v.id; $("tituloModalVehiculo").textContent="Modificar vehículo"; $("guardarVehiculo").textContent="Guardar cambios";
+  abrirModal("modalVehiculo");
+}
+function eliminarVehiculo(v){
+  mostrarConfirm("Eliminar vehículo",`¿Eliminar "${v.marca} ${v.modelo}"?`, async()=>{
+    try{ await Vehiculos.eliminar(v.id); pintarVehiculos(); }catch(err){ mostrarNota("Error",err.message); }
   });
 }
-
-function limpiarModalVehiculo() {
-  setValor("vMarca", "");
-  setValor("vModelo", "");
-  setValor("vPatente", "");
-  setValor("vAnio", "");
-  vehiculoEditando = null;
-  $("tituloModalVehiculo").textContent = "Nuevo vehículo";
-  $("guardarVehiculo").textContent = "Guardar";
-}
-
-function editarVehiculo(i) {
-  const v = vehiculos[i];
-  setValor("vMarca",   v.marca);
-  setValor("vModelo",  v.modelo);
-  setValor("vPatente", v.patente);
-  setValor("vAnio",    v.anio);
-  vehiculoEditando = i;
-  $("tituloModalVehiculo").textContent = "Modificar vehículo";
-  $("guardarVehiculo").textContent = "Guardar cambios";
-  abrirModal("modalVehiculo");
-}
-
-function eliminarVehiculo(i) {
-  mostrarConfirm(
-    "Eliminar vehículo",
-    `¿Seguro que querés eliminar "${vehiculos[i].marca} ${vehiculos[i].modelo}"?`,
-    () => {
-      vehiculos.splice(i, 1);
-      guardarDB(KEY_VEHICULOS, vehiculos);
-      pintarVehiculos();
-    }
-  );
-}
-
-$("btnNuevoVehiculo").addEventListener("click", () => {
-  limpiarModalVehiculo();
-  abrirModal("modalVehiculo");
+$("btnNuevoVehiculo").addEventListener("click",()=>{ limpiarModalVehiculo(); abrirModal("modalVehiculo"); });
+$("guardarVehiculo").addEventListener("click", async()=>{
+  const marca=valor("vMarca"), modelo=valor("vModelo");
+  if(!marca||!modelo){ mostrarNota("Error","Marca y modelo son obligatorios."); return; }
+  const data={ marca, modelo, patente:valor("vPatente"), anio:valor("vAnio") };
+  try{
+    vehiculoEditando ? await Vehiculos.editar(vehiculoEditando,data) : await Vehiculos.crear(data);
+    cerrarModal("modalVehiculo"); limpiarModalVehiculo(); pintarVehiculos();
+  }catch(err){ mostrarNota("Error",err.message); }
 });
 
-$("guardarVehiculo").addEventListener("click", () => {
-  const marca  = valor("vMarca");
-  const modelo = valor("vModelo");
-  if (!marca || !modelo) { alert("Marca y modelo son obligatorios."); return; }
+// ── INIT — verificar sesión ──────────────────
+Auth.sesion()
+  .then(()=>{ pintarClientes(); pintarChoferes(); pintarVehiculos(); })
+  .catch(()=>{ window.location.href="index.html"; });
 
-  const nuevo = {
-    marca,
-    modelo,
-    patente: valor("vPatente"),
-    anio:    valor("vAnio"),
-  };
-
-  if (vehiculoEditando !== null) {
-    vehiculos[vehiculoEditando] = nuevo;
-  } else {
-    vehiculos.push(nuevo);
+// Activar tab según hash al cargar
+(function() {
+  const hash = window.location.hash.replace("#", "");
+  const tabs = ["clientes", "choferes", "vehiculos"];
+  if (hash && tabs.includes(hash)) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    document.querySelector(`[data-tab="${hash}"]`)?.classList.add("active");
+    document.getElementById(`tab-${hash}`)?.classList.add("active");
   }
-
-  guardarDB(KEY_VEHICULOS, vehiculos);
-  cerrarModal("modalVehiculo");
-  limpiarModalVehiculo();
-  pintarVehiculos();
-});
-
-// ── INIT ──
-pintarClientes();
-pintarChoferes();
-pintarVehiculos();
+})();

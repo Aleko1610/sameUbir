@@ -65,6 +65,7 @@ $db->exec("
         id         INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER NOT NULL,
         cliente_id INTEGER,
+        estado     TEXT NOT NULL DEFAULT 'pendiente',
         datos      TEXT NOT NULL,
         creado_en  TEXT NOT NULL DEFAULT (datetime('now')),
         actualizado_en TEXT NOT NULL DEFAULT (datetime('now')),
@@ -130,7 +131,7 @@ if (!$existe->fetch()) {
 
   <div class="warn">⚠ Eliminá o protegé este archivo (install.php) antes de subir a producción.</div>
 
-  <a href="index.html">Ir a la app →</a>
+  <a href="dash.html">Ir al dashboard →</a>
 </div>
 </body>
 </html>
